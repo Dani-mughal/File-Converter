@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ConvertHub.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bb87e3bd234035c69818f33080735bc23c4cc90a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bee846662afa7a71f980fefad3a5702f4e03e6d3")]
 [assembly: System.Reflection.AssemblyProductAttribute("ConvertHub.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ConvertHub.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

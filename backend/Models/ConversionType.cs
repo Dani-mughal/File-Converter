@@ -5,6 +5,6 @@ namespace ConvertHub.Api.Models
         Unknown = 0,
         PdfToWord,
         PdfToExcel,
-        ImageToPdf
+        WordToPdf
     }
 }

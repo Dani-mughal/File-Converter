@@ -14,7 +14,8 @@
           "Microsoft.EntityFrameworkCore.SqlServer": "9.0.15",
           "Microsoft.EntityFrameworkCore.Tools": "9.0.15",
           "SixLabors.ImageSharp": "3.1.12",
-          "itext7": "9.6.0"
+          "itext7": "9.6.0",
+          "itext7.bouncy-castle-adapter": "9.6.0"
         },
         "runtime": {
           "ConvertHub.Api.dll": {}
@@ -52,6 +53,14 @@
           "lib/netstandard2.0/Azure.Identity.dll": {
             "assemblyVersion": "1.11.4.0",
             "fileVersion": "1.1100.424.31005"
+          }
+        }
+      },
+      "BouncyCastle.Cryptography/2.6.2": {
+        "runtime": {
+          "lib/net6.0/BouncyCastle.Cryptography.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.6.2.46322"
           }
         }
       },
@@ -151,6 +160,18 @@
           }
         }
       },
+      "itext.bouncy-castle-adapter/9.6.0": {
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.6.2",
+          "itext.commons": "9.6.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/itext.bouncy-castle-adapter.dll": {
+            "assemblyVersion": "9.6.0.0",
+            "fileVersion": "9.6.0.0"
+          }
+        }
+      },
       "itext.commons/9.6.0": {
         "dependencies": {
           "Microsoft.Extensions.Logging": "9.0.15",
@@ -166,6 +187,11 @@
       "itext7/9.6.0": {
         "dependencies": {
           "itext": "9.6.0"
+        }
+      },
+      "itext7.bouncy-castle-adapter/9.6.0": {
+        "dependencies": {
+          "itext.bouncy-castle-adapter": "9.6.0"
         }
       },
       "Microsoft.AspNetCore.OpenApi/9.0.10": {
@@ -1640,6 +1666,13 @@
       "path": "azure.identity/1.11.4",
       "hashPath": "azure.identity.1.11.4.nupkg.sha512"
     },
+    "BouncyCastle.Cryptography/2.6.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7oWOcvnntmMKNzDLsdxAYqApt+AjpRpP2CShjMfIa3umZ42UQMvH0tl1qAliYPNYO6vTdcGMqnRrCPmsfzTI1w==",
+      "path": "bouncycastle.cryptography/2.6.2",
+      "hashPath": "bouncycastle.cryptography.2.6.2.nupkg.sha512"
+    },
     "DocumentFormat.OpenXml/3.5.1": {
       "type": "package",
       "serviceable": true,
@@ -1668,6 +1701,13 @@
       "path": "itext/9.6.0",
       "hashPath": "itext.9.6.0.nupkg.sha512"
     },
+    "itext.bouncy-castle-adapter/9.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3qEURrZV1hP16WVE9Qng2C73/FmfBbLB6hloA38LhfNNpILEZMhi6yNjYJfc2ORBWDmL1S6ZrhhIbc4lsObHig==",
+      "path": "itext.bouncy-castle-adapter/9.6.0",
+      "hashPath": "itext.bouncy-castle-adapter.9.6.0.nupkg.sha512"
+    },
     "itext.commons/9.6.0": {
       "type": "package",
       "serviceable": true,
@@ -1681,6 +1721,13 @@
       "sha512": "sha512-ZZxr+t23Mn8084v6vPidmry/JrQ7n4LW6ur64OfMO2N4WAckdm+A8mbENK03J8vGxzFB0fD04KXsS1+HnvTB9Q==",
       "path": "itext7/9.6.0",
       "hashPath": "itext7.9.6.0.nupkg.sha512"
+    },
+    "itext7.bouncy-castle-adapter/9.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-COVLcM1Jo5H0hLgHqbbhVWMVmy8byGsWYXPPx+1GMQflCF6198JcUTMETEo3vOnoZtdXcELtFtsSkbp6+h9H+g==",
+      "path": "itext7.bouncy-castle-adapter/9.6.0",
+      "hashPath": "itext7.bouncy-castle-adapter.9.6.0.nupkg.sha512"
     },
     "Microsoft.AspNetCore.OpenApi/9.0.10": {
       "type": "package",

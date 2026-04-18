@@ -184,3 +184,5 @@ C:\Users\DELL\OneDrive\Desktop\Files converter\backend\bin\Debug\net9.0\runtimes
 C:\Users\DELL\OneDrive\Desktop\Files converter\backend\bin\Debug\net9.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
 C:\Users\DELL\OneDrive\Desktop\Files converter\backend\bin\Debug\net9.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\DELL\OneDrive\Desktop\Files converter\backend\bin\Debug\net9.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+C:\Users\DELL\OneDrive\Desktop\Files converter\backend\bin\Debug\net9.0\BouncyCastle.Cryptography.dll
+C:\Users\DELL\OneDrive\Desktop\Files converter\backend\bin\Debug\net9.0\itext.bouncy-castle-adapter.dll

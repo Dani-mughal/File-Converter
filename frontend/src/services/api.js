@@ -40,7 +40,7 @@ export function getOutputExtension(conversionType) {
   const map = {
     'pdf-to-word': '.docx',
     'pdf-to-excel': '.xlsx',
-    'image-to-pdf': '.pdf',
+    'word-to-pdf': '.pdf',
   };
   return map[conversionType] || '.bin';
 }
@@ -52,7 +52,7 @@ export function getOutputMimeType(conversionType) {
   const map = {
     'pdf-to-word': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'pdf-to-excel': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'image-to-pdf': 'application/pdf',
+    'word-to-pdf': 'application/pdf',
   };
   return map[conversionType] || 'application/octet-stream';
 }

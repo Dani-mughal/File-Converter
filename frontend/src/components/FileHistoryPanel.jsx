@@ -22,7 +22,7 @@ function timeAgo(dateStr) {
 const conversionLabels = {
   'pdf-to-word': 'PDF → Word',
   'pdf-to-excel': 'PDF → Excel',
-  'image-to-pdf': 'Image → PDF',
+  'word-to-pdf': 'Word → PDF',
 };
 
 export default function FileHistoryPanel({ history, onClear, onRemove }) {

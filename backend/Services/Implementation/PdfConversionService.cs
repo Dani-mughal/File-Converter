@@ -43,8 +43,8 @@ namespace ConvertHub.Api.Services.Implementation
                     case ConversionType.PdfToExcel:
                         ConvertPdfToExcel(sourceFilePath, outputFilePath);
                         break;
-                    case ConversionType.ImageToPdf:
-                        ConvertImageToPdf(sourceFilePath, outputFilePath);
+                    case ConversionType.WordToPdf:
+                        ConvertWordToPdf(sourceFilePath, outputFilePath);
                         break;
                     default:
                         throw new ArgumentException("Unsupported conversion type");
@@ -60,7 +60,7 @@ namespace ConvertHub.Api.Services.Implementation
             {
                 ConversionType.PdfToWord => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 ConversionType.PdfToExcel => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                ConversionType.ImageToPdf => "application/pdf",
+                ConversionType.WordToPdf => "application/pdf",
                 _ => "application/octet-stream",
             };
         }
@@ -78,7 +78,7 @@ namespace ConvertHub.Api.Services.Implementation
             {
                 "pdf-to-word" => ConversionType.PdfToWord,
                 "pdf-to-excel" => ConversionType.PdfToExcel,
-                "image-to-pdf" => ConversionType.ImageToPdf,
+                "word-to-pdf" => ConversionType.WordToPdf,
                 _ => ConversionType.Unknown
             };
         }
@@ -89,7 +89,7 @@ namespace ConvertHub.Api.Services.Implementation
             {
                 ConversionType.PdfToWord => ".docx",
                 ConversionType.PdfToExcel => ".xlsx",
-                ConversionType.ImageToPdf => ".pdf",
+                ConversionType.WordToPdf => ".pdf",
                 _ => ".tmp"
             };
         }
@@ -187,26 +187,40 @@ namespace ConvertHub.Api.Services.Implementation
             }
         }
 
-        private void ConvertImageToPdf(string sourcePath, string destPath)
+        private void ConvertWordToPdf(string sourcePath, string destPath)
         {
             try
             {
-                // Verify image with ImageSharp first
-                using (var image = SixLabors.ImageSharp.Image.Load(sourcePath))
+                using var wordDoc = WordprocessingDocument.Open(sourcePath, false);
+                var body = wordDoc.MainDocumentPart?.Document.Body;
+                
+                using var writer = new PdfWriter(destPath);
+                using var pdf = new PdfDocument(writer);
+                using var document = new Document(pdf);
+                
+                if (body != null)
                 {
-                    using var writer = new PdfWriter(destPath);
-                    using var pdf = new PdfDocument(writer);
-                    using var document = new Document(pdf);
-
-                    var imageData = ImageDataFactory.Create(sourcePath);
-                    var pdfImage = new Image(imageData);
-                    document.Add(pdfImage);
+                    foreach (var element in body.Elements())
+                    {
+                        if (element is DocumentFormat.OpenXml.Wordprocessing.Paragraph p)
+                        {
+                            var text = p.InnerText;
+                            if (!string.IsNullOrWhiteSpace(text))
+                            {
+                                document.Add(new iText.Layout.Element.Paragraph(text));
+                            }
+                            else 
+                            {
+                                document.Add(new iText.Layout.Element.Paragraph("\n"));
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error converting Image to PDF");
-                throw new InvalidOperationException("Failed to convert Image to PDF. Ensure the image is valid.", ex);
+                _logger.LogError(ex, "Error converting Word to PDF");
+                throw new InvalidOperationException("Failed to convert Word to PDF. Ensure the file is not corrupted.", ex);
             }
         }
     }
