@@ -13,10 +13,8 @@ const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50 MB
 
 const ACCEPTED_TYPES = {
   'application/pdf': ['.pdf'],
-  'image/png': ['.png'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/webp': ['.webp'],
-  'image/bmp': ['.bmp'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'application/msword': ['.doc'],
 };
 
 function formatSize(bytes) {
@@ -26,7 +24,6 @@ function formatSize(bytes) {
 }
 
 function getFileIcon(type) {
-  if (type?.startsWith('image/')) return <HiOutlinePhoto className="w-6 h-6" />;
   return <HiOutlineDocument className="w-6 h-6" />;
 }
 
@@ -40,7 +37,7 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
         if (err.code === 'file-too-large') {
           onFileSelect(null, `File exceeds ${formatSize(FILE_SIZE_LIMIT)} limit.`);
         } else if (err.code === 'file-invalid-type') {
-          onFileSelect(null, 'Unsupported file type. Use PDF, PNG, JPG, or WebP.');
+          onFileSelect(null, 'Unsupported file type. Use PDF, DOC, or DOCX.');
         } else {
           onFileSelect(null, err.message);
         }
@@ -136,7 +133,7 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
                     darkMode ? 'text-slate-500' : 'text-slate-400'
                   }`}
                 >
-                  {['PDF', 'PNG', 'JPG', 'WebP'].map((ext) => (
+                  {['PDF', 'DOC', 'DOCX'].map((ext) => (
                     <span
                       key={ext}
                       className={`px-2.5 py-1 rounded-lg ${
