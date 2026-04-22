@@ -27,9 +27,14 @@ export default function Footer() {
           </div>
 
           {/* Center */}
-          <p className="text-sm flex items-center gap-1">
-            Made with <HiOutlineHeart className="w-4 h-4 text-red-400" /> for seamless file conversion
-          </p>
+          <div className="text-center flex flex-col gap-1 items-center">
+            <p className="text-sm flex items-center gap-1 leading-none">
+              Made with <HiOutlineHeart className="w-4 h-4 text-red-400" /> for seamless file conversion
+            </p>
+            <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+              We respect your privacy. No files are stored or shared.
+            </p>
+          </div>
 
           {/* Links */}
           <div className="flex items-center gap-6 text-sm">
