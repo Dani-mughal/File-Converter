@@ -10,6 +10,7 @@ import ConversionSelector from '../components/ConversionSelector';
 import ProgressBar from '../components/ProgressBar';
 import ResultDownload from '../components/ResultDownload';
 import FileHistoryPanel from '../components/FileHistoryPanel';
+import SecurityFeatures from '../components/SecurityFeatures';
 
 const STEPS = {
   UPLOAD: 'upload',
@@ -224,6 +225,8 @@ export default function ConvertPage() {
                     ? 'Select a conversion type'
                     : 'Convert Now'}
                 </motion.button>
+                
+                <SecurityFeatures />
               </motion.div>
             )}
 
