@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://file-converter-cy0v.onrender.com/api',
   timeout: 120000, // 2 minutes for large files
 });
 
