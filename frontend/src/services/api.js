@@ -41,6 +41,15 @@ export function getOutputExtension(conversionType) {
     'pdf-to-word': '.docx',
     'pdf-to-excel': '.xlsx',
     'word-to-pdf': '.pdf',
+    'ppt-to-pdf': '.pdf',
+    'pdf-to-ppt': '.pptx',
+    'excel-to-pdf': '.pdf',
+    'zip': '.zip',
+    'unzip': '.bin', // Default fallback, but backend controls exact download filename anyway
+    'image-to-pdf': '.pdf',
+    'pdf-to-image': '.png',
+    'csv-to-pdf': '.pdf',
+    'pdf-to-csv': '.csv',
   };
   return map[conversionType] || '.bin';
 }
@@ -53,6 +62,14 @@ export function getOutputMimeType(conversionType) {
     'pdf-to-word': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'pdf-to-excel': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'word-to-pdf': 'application/pdf',
+    'ppt-to-pdf': 'application/pdf',
+    'pdf-to-ppt': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'excel-to-pdf': 'application/pdf',
+    'zip': 'application/zip',
+    'image-to-pdf': 'application/pdf',
+    'pdf-to-image': 'image/png',
+    'csv-to-pdf': 'application/pdf',
+    'pdf-to-csv': 'text/csv',
   };
   return map[conversionType] || 'application/octet-stream';
 }
