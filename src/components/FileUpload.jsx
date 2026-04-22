@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Lock } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import {
   HiOutlineCloudArrowUp,
@@ -145,6 +146,11 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
                   ))}
                   <span>• Max {formatSize(FILE_SIZE_LIMIT)}</span>
                 </div>
+                
+                <div className={`mt-6 flex items-center justify-center gap-1.5 text-xs font-medium opacity-60 ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                  <Lock className="w-3 h-3" />
+                  <span>Your files are private and auto-deleted</span>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -160,36 +166,43 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
               darkMode ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-slate-50 border border-slate-200'
             }`}
           >
-            <div className="flex items-center gap-4">
-              <div
-                className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${
-                  darkMode ? 'bg-primary-500/15 text-primary-400' : 'bg-primary-50 text-primary-600'
-                }`}
-              >
-                {getFileIcon(file.type)}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <div
+                  className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${
+                    darkMode ? 'bg-primary-500/15 text-primary-400' : 'bg-primary-50 text-primary-600'
+                  }`}
+                >
+                  {getFileIcon(file.type)}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <p className={`font-medium truncate ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                    {file.name}
+                  </p>
+                  <p className={`text-sm mt-0.5 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {formatSize(file.size)} • {file.type || 'Unknown type'}
+                  </p>
+                </div>
+
+                <button
+                  onClick={onFileRemove}
+                  id="remove-file-btn"
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    darkMode
+                      ? 'text-slate-400 hover:text-red-400 hover:bg-red-400/10'
+                      : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
+                  }`}
+                  aria-label="Remove file"
+                >
+                  <HiOutlineXMark className="w-5 h-5" />
+                </button>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium truncate ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-                  {file.name}
-                </p>
-                <p className={`text-sm mt-0.5 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {formatSize(file.size)} • {file.type || 'Unknown type'}
-                </p>
+              <div className={`flex items-center justify-center gap-1.5 text-xs font-medium opacity-60 ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                <Lock className="w-3 h-3" />
+                <span>Your files are private and auto-deleted</span>
               </div>
-
-              <button
-                onClick={onFileRemove}
-                id="remove-file-btn"
-                className={`p-2 rounded-xl transition-all cursor-pointer ${
-                  darkMode
-                    ? 'text-slate-400 hover:text-red-400 hover:bg-red-400/10'
-                    : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
-                }`}
-                aria-label="Remove file"
-              >
-                <HiOutlineXMark className="w-5 h-5" />
-              </button>
             </div>
           </motion.div>
         )}
