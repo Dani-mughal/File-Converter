@@ -1,0 +1,15 @@
+# Build artifacts
+backend/bin/
+backend/obj/
+frontend/dist/
+frontend/node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS files
+.vs/
+*.user
+*.suo
+*.sln
