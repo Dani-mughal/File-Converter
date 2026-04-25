@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { 
   HiOutlineVideoCamera, 
@@ -16,8 +17,14 @@ const CATEGORIES = [
     color: 'text-rose-500',
     bg: 'bg-rose-500/10',
     links: [
-      'Video Converter', 'Audio Converter', 'MP3 Converter', 'MP4 to MP3', 
-      'Video to MP3', 'MP4 Converter', 'MOV to MP4', 'MP3 to OGG'
+      { label: 'Video Converter', id: 'video' },
+      { label: 'Audio Converter', id: 'audio' },
+      { label: 'MP3 Converter', id: 'mp3' },
+      { label: 'MP4 to MP3', id: 'mp4-to-mp3' },
+      { label: 'Video to MP3', id: 'video-to-mp3' },
+      { label: 'MP4 Converter', id: 'mp4' },
+      { label: 'MOV to MP4', id: 'mov-to-mp4' },
+      { label: 'MP3 to OGG', id: 'mp3-to-ogg' }
     ]
   },
   {
@@ -26,8 +33,14 @@ const CATEGORIES = [
     color: 'text-blue-500',
     bg: 'bg-blue-500/10',
     links: [
-      'Image Converter', 'WEBP to PNG', 'JFIF to PNG', 'PNG to SVG', 
-      'HEIC to JPG', 'HEIC to PNG', 'WEBP to JPG', 'SVG Converter'
+      { label: 'Image Converter', id: 'image' },
+      { label: 'WEBP to PNG', id: 'webp-to-png' },
+      { label: 'JFIF to PNG', id: 'jfif-to-png' },
+      { label: 'PNG to SVG', id: 'png-to-svg' },
+      { label: 'HEIC to JPG', id: 'heic-to-jpg' },
+      { label: 'HEIC to PNG', id: 'heic-to-png' },
+      { label: 'WEBP to JPG', id: 'webp-to-jpg' },
+      { label: 'SVG Converter', id: 'svg' }
     ]
   },
   {
@@ -36,8 +49,14 @@ const CATEGORIES = [
     color: 'text-amber-500',
     bg: 'bg-amber-500/10',
     links: [
-      'PDF Converter', 'Document Converter', 'Ebook Converter', 'PDF to Word', 
-      'PDF to JPG', 'PDF to EPUB', 'EPUB to PDF', 'HEIC to PDF'
+      { label: 'PDF Converter', id: 'pdf' },
+      { label: 'Document Converter', id: 'document' },
+      { label: 'Ebook Converter', id: 'ebook' },
+      { label: 'PDF to Word', id: 'pdf-to-word' },
+      { label: 'PDF to JPG', id: 'pdf-to-jpg' },
+      { label: 'PDF to EPUB', id: 'pdf-to-epub' },
+      { label: 'EPUB to PDF', id: 'epub-to-pdf' },
+      { label: 'HEIC to PDF', id: 'heic-to-pdf' }
     ]
   },
   {
@@ -46,8 +65,14 @@ const CATEGORIES = [
     color: 'text-emerald-500',
     bg: 'bg-emerald-500/10',
     links: [
-      'Video to GIF', 'MP4 to GIF', 'WEBM to GIF', 'APNG to GIF', 
-      'GIF to MP4', 'GIF to APNG', 'Image to GIF', 'MOV to GIF'
+      { label: 'Video to GIF', id: 'video-to-gif' },
+      { label: 'MP4 to GIF', id: 'mp4-to-gif' },
+      { label: 'WEBM to GIF', id: 'webm-to-gif' },
+      { label: 'APNG to GIF', id: 'apng-to-gif' },
+      { label: 'GIF to MP4', id: 'gif-to-mp4' },
+      { label: 'GIF to APNG', id: 'gif-to-apng' },
+      { label: 'Image to GIF', id: 'image-to-gif' },
+      { label: 'MOV to GIF', id: 'mov-to-gif' }
     ]
   },
   {
@@ -56,8 +81,14 @@ const CATEGORIES = [
     color: 'text-purple-500',
     bg: 'bg-purple-500/10',
     links: [
-      'Unit Converter', 'Time Converter', 'Archive Converter', 'JSON to CSV',
-      'XML to JSON', 'Markdown to HTML', 'CSS Minifier', 'JS Beautifier'
+      { label: 'Unit Converter', id: 'unit' },
+      { label: 'Time Converter', id: 'time' },
+      { label: 'Archive Converter', id: 'archive' },
+      { label: 'JSON to CSV', id: 'json-to-csv' },
+      { label: 'XML to JSON', id: 'xml-to-json' },
+      { label: 'Markdown to HTML', id: 'markdown-to-html' },
+      { label: 'CSS Minifier', id: 'css-min' },
+      { label: 'JS Beautifier', id: 'js-beautify' }
     ]
   }
 ];
@@ -66,7 +97,7 @@ export default function ConversionGrid() {
   const { darkMode } = useTheme();
 
   return (
-    <section className={`py-24 ${darkMode ? 'bg-slate-950' : 'bg-white'}`}>
+    <section id="conversions" className={`py-24 ${darkMode ? 'bg-slate-950' : 'bg-white'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.h2 
@@ -113,16 +144,16 @@ export default function ConversionGrid() {
 
               <ul className="space-y-3">
                 {cat.links.map((link) => (
-                  <li key={link}>
-                    <a 
-                      href="#" 
+                  <li key={link.id}>
+                    <Link 
+                      to={`/convert?type=${link.id}`} 
                       className={`group flex items-center justify-between text-[13px] transition-colors ${
                         darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
-                      <span>{link}</span>
+                      <span>{link.label}</span>
                       <HiChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary-500" />
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
