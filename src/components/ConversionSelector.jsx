@@ -303,10 +303,12 @@ export default function ConversionSelector({ selected, onSelect, fileType }) {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 p-4 rounded-2xl border border-dashed ${
-              darkMode ? 'border-white/5 bg-white/5' : 'border-black/5 bg-slate-50'
+            <div className={`mt-2 mb-4 p-1 rounded-2xl border ${
+              darkMode ? 'border-white/5 bg-slate-900/50' : 'border-black/5 bg-slate-50/50'
             }`}>
-              {remainingOptions.map((opt, i) => renderOption(opt, i + 4))}
+              <div className="max-h-[320px] overflow-y-auto custom-scrollbar p-3 space-y-2">
+                {remainingOptions.map((opt, i) => renderOption(opt, i + 4))}
+              </div>
             </div>
           </motion.div>
         )}
