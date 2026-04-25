@@ -16,6 +16,15 @@ const ACCEPTED_TYPES = {
   'application/pdf': ['.pdf'],
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
   'application/msword': ['.doc'],
+  'application/vnd.ms-excel': ['.xls'],
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+  'application/vnd.ms-powerpoint': ['.ppt'],
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+  'text/csv': ['.csv'],
+  'image/jpeg': ['.jpeg', '.jpg'],
+  'image/png': ['.png'],
+  'application/zip': ['.zip'],
+  'application/x-zip-compressed': ['.zip'],
 };
 
 function formatSize(bytes) {
@@ -25,6 +34,9 @@ function formatSize(bytes) {
 }
 
 function getFileIcon(type) {
+  if (type?.includes('pdf')) return <HiOutlineDocument className="w-6 h-6" />;
+  if (type?.includes('image')) return <HiOutlinePhoto className="w-6 h-6" />;
+  if (type?.includes('zip')) return <HiOutlineDocument className="w-6 h-6" />;
   return <HiOutlineDocument className="w-6 h-6" />;
 }
 
@@ -38,7 +50,7 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
         if (err.code === 'file-too-large') {
           onFileSelect(null, `File exceeds ${formatSize(FILE_SIZE_LIMIT)} limit.`);
         } else if (err.code === 'file-invalid-type') {
-          onFileSelect(null, 'Unsupported file type. Use PDF, DOC, or DOCX.');
+          onFileSelect(null, 'Unsupported file type. Please upload a supported document, image, or zip archive.');
         } else {
           onFileSelect(null, err.message);
         }
@@ -134,7 +146,7 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
                     darkMode ? 'text-slate-500' : 'text-slate-400'
                   }`}
                 >
-                  {['PDF', 'DOC', 'DOCX'].map((ext) => (
+                  {['PDF', 'DOC', 'DOCX', 'PPT', 'XLS', 'CSV', 'ZIP', 'IMG'].map((ext) => (
                     <span
                       key={ext}
                       className={`px-2.5 py-1 rounded-lg ${

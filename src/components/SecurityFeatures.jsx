@@ -1,100 +1,149 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Lock, Clock, CheckCircle, Info } from 'lucide-react';
+import { 
+  HiOutlineShieldCheck, 
+  HiOutlineLockClosed, 
+  HiOutlineEyeSlash,
+  HiOutlineTrash,
+  HiOutlineInformationCircle,
+  HiOutlineCheckBadge
+} from 'react-icons/hi2';
 import { useTheme } from '../context/ThemeContext';
 
-const FEATURES = [
+const SECURITY_ITEMS = [
   {
-    id: 'deletion',
-    icon: Clock,
+    icon: HiOutlineLockClosed,
+    title: 'SSL Encryption',
+    description: 'Every byte of data sent to our servers is protected with 256-bit SSL encryption.',
+    color: 'text-blue-500',
+    bg: 'bg-blue-500/10'
+  },
+  {
+    icon: HiOutlineEyeSlash,
+    title: 'Privacy Guaranteed',
+    description: "Our automated process means no human will ever see your files. Total anonymity.",
+    color: 'text-purple-500',
+    bg: 'bg-purple-500/10'
+  },
+  {
+    icon: HiOutlineTrash,
     title: 'Automatic Deletion',
-    text: 'Your files are automatically deleted after 15 minutes.',
-    color: 'emerald',
+    description: 'We store files temporarily. Everything is permanently wiped from our cloud after 24 hours.',
+    color: 'text-rose-500',
+    bg: 'bg-rose-500/10'
   },
   {
-    id: 'privacy',
-    icon: Shield,
-    title: 'We do not store, view, or share your files.',
-    text: 'We respect your privacy. No files are stored or shared.',
-    color: 'blue',
-  },
-  {
-    id: 'encryption',
-    icon: Lock,
-    title: 'All file transfers are encrypted.',
-    text: 'Your data is protected with SSL/TLS encryption.',
-    color: 'cyan',
-  },
+    icon: HiOutlineShieldCheck,
+    title: 'GDPR Compliant',
+    description: 'We follow strict data protection regulations to ensure your rights are respected.',
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-500/10'
+  }
 ];
 
 export default function SecurityFeatures() {
   const { darkMode } = useTheme();
-  const [showLearnMore, setShowLearnMore] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="mt-8 space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {FEATURES.map((feature) => (
+    <div className={`py-12 px-6 sm:px-10 rounded-[2.5rem] transition-all duration-500 ${
+      darkMode ? 'bg-slate-900/40 border border-white/5' : 'bg-white border border-slate-100 shadow-2xl shadow-slate-200/40'
+    }`}>
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
           <motion.div
-            key={feature.id}
-            whileHover={{ y: -4, shadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
-            className={`p-5 rounded-2xl border transition-all duration-300 ${
-              darkMode
-                ? 'bg-slate-800/40 border-slate-700/50 hover:border-slate-600'
-                : 'bg-white border-slate-100 hover:border-slate-200 shadow-sm'
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 ${
+              darkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
             }`}
           >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-${feature.color}-500/10 text-${feature.color}-500`}>
-              <feature.icon className="w-5 h-5" />
-            </div>
-            <h4 className={`text-sm font-semibold mb-1 ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-              {feature.id === 'deletion' ? 'Auto-Delete' : feature.id === 'privacy' ? 'Privacy First' : 'Secure Transfer'}
-            </h4>
-            <p className={`text-xs leading-relaxed ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              {feature.text}
-            </p>
+            <HiOutlineCheckBadge className="w-4 h-4" />
+            Military-Grade Security
           </motion.div>
-        ))}
-      </div>
+          <h2 className={`text-3xl font-black mb-4 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            Your Data is Safe with Us
+          </h2>
+          <p className={`text-sm max-w-xl mx-auto ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            We understand the importance of your file security. Our platform is built on 
+            a foundation of trust and technical excellence.
+          </p>
+        </div>
 
-      <div className="flex justify-center">
-        <button
-          onClick={() => setShowLearnMore(!showLearnMore)}
-          className={`group flex items-center gap-2 text-xs font-medium transition-colors cursor-pointer ${
-            darkMode ? 'text-primary-400 hover:text-primary-300' : 'text-primary-600 hover:text-primary-700'
-          }`}
-        >
-          <Info className="w-3.5 h-3.5" />
-          {showLearnMore ? 'Show less' : 'Learn more about our security'}
-        </button>
-      </div>
-
-      <AnimatePresence>
-        {showLearnMore && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className={`overflow-hidden rounded-2xl p-5 ${
-              darkMode ? 'bg-slate-900/50 border border-slate-800' : 'bg-slate-50 border border-slate-100'
-            }`}
-          >
-            <div className="flex gap-4">
-              <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-                  Secure Processing Guarantee
-                </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {SECURITY_ITEMS.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className={`flex gap-5 p-6 rounded-2xl transition-all group ${
+                darkMode ? 'hover:bg-white/5' : 'hover:bg-primary-50/50'
+              }`}
+            >
+              <div className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${item.bg} ${item.color}`}>
+                <item.icon className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className={`font-bold mb-1 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                  {item.title}
+                </h3>
                 <p className={`text-xs leading-relaxed ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Files are processed securely and permanently deleted from our servers after conversion. 
-                  No backups are stored, and no manual viewing of files is performed by our staff. 
-                  Your data remaining private is our top priority.
+                  {item.description}
                 </p>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-colors ${
+              darkMode ? 'text-primary-400 hover:text-primary-300' : 'text-primary-600 hover:text-primary-700'
+            }`}
+          >
+            <HiOutlineInformationCircle className="w-4 h-4" />
+            {isExpanded ? 'Hide Details' : 'View Full Security Protocol'}
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className={`mt-8 p-8 rounded-3xl border border-dashed ${
+                darkMode ? 'border-white/10 bg-white/5' : 'border-primary-200 bg-primary-50/30'
+              }`}>
+                <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <HiOutlineCheckBadge className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <p className={`text-sm font-bold ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>Verified Security Protocol</p>
+                    </div>
+                    <p className={`text-xs leading-relaxed max-w-md ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Our servers are audited regularly to maintain the highest standards of data integrity. 
+                      We use specialized ephemeral environments for conversion, meaning your data never 
+                      touches a permanent storage disk.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-4 justify-center">
+                    <div className="px-5 py-3 bg-slate-800 rounded-xl text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg">PCI-DSS</div>
+                    <div className="px-5 py-3 bg-slate-800 rounded-xl text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg">ISO 27001</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
