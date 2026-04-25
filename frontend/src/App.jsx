@@ -1,3 +1,4 @@
+// v1.1 - Professional UI Update
 import { Routes, Route } from 'react-router-dom';
 import { useTheme } from './context/ThemeContext';
 import Navbar from './components/Navbar';
