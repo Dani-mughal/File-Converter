@@ -15,6 +15,9 @@ namespace ConvertHub.Api.Models
         JpgToPdf,
         DocumentToPdf,
         EbookToPdf,
+        PptToPdf,
+        ExcelToPdf,
+        PdfToCsv,
         
         // Images
         ImageToPdf, // Already partially supported
@@ -49,6 +52,16 @@ namespace ConvertHub.Api.Models
 
         // Archives
         Zip,
-        Unzip
+        Unzip,
+        Archive,
+
+        // Code & Data
+        JsonToCsv,
+        XmlToJson,
+        MarkdownToHtml,
+        CssMin,
+        JsBeautify,
+        Unit,
+        Time
     }
 }

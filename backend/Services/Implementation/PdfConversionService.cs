@@ -20,11 +20,22 @@ namespace ConvertHub.Api.Services.Implementation
     {
         private readonly IFileStorageService _fileStorageService;
         private readonly ILogger<PdfConversionService> _logger;
+        private readonly MediaConversionService _mediaService;
+        private readonly ImageConversionService _imageService;
+        private readonly TextDataConversionService _textDataService;
 
-        public PdfConversionService(IFileStorageService fileStorageService, ILogger<PdfConversionService> logger)
+        public PdfConversionService(
+            IFileStorageService fileStorageService, 
+            ILogger<PdfConversionService> logger,
+            MediaConversionService mediaService,
+            ImageConversionService imageService,
+            TextDataConversionService textDataService)
         {
             _fileStorageService = fileStorageService;
             _logger = logger;
+            _mediaService = mediaService;
+            _imageService = imageService;
+            _textDataService = textDataService;
         }
 
         public async Task<string> ConvertAsync(string sourceFilePath, ConversionType conversionType)
@@ -32,60 +43,75 @@ namespace ConvertHub.Api.Services.Implementation
             var outputFileName = $"{Guid.NewGuid()}{GetTempExtension(conversionType)}";
             var outputFilePath = Path.Combine(_fileStorageService.GetTempDirectory(), outputFileName);
 
-            await Task.Run(() =>
+            switch (conversionType)
             {
-                switch (conversionType)
-                {
-                    case ConversionType.PdfToWord:
-                        ConvertPdfToWord(sourceFilePath, outputFilePath);
-                        break;
-                    case ConversionType.PdfToExcel:
-                        ConvertPdfToExcel(sourceFilePath, outputFilePath);
-                        break;
-                    case ConversionType.WordToPdf:
-                    case ConversionType.DocxToPdf:
-                        ConvertWordToPdf(sourceFilePath, outputFilePath);
-                        break;
-                    case ConversionType.WebpToPng:
-                        ConvertImage(sourceFilePath, outputFilePath, new PngEncoder());
-                        break;
-                    case ConversionType.WebpToJpg:
-                    case ConversionType.HeicToJpg:
-                        ConvertImage(sourceFilePath, outputFilePath, new JpegEncoder());
-                        break;
-                    case ConversionType.HeicToPng:
-                        ConvertImage(sourceFilePath, outputFilePath, new PngEncoder());
-                        break;
-                    case ConversionType.Zip:
-                        CreateZip(sourceFilePath, outputFilePath);
-                        break;
-                    case ConversionType.Unzip:
-                        ExtractZip(sourceFilePath, outputFilePath);
-                        break;
-                    case ConversionType.ImageToPdf:
-                    case ConversionType.JpgToPdf:
-                        ConvertImageToPdf(sourceFilePath, outputFilePath);
-                        break;
-                    case ConversionType.PdfToJpg:
-                        // Simple PDF to Image logic using iText7 (first page)
-                        ConvertPdfToImage(sourceFilePath, outputFilePath);
-                        break;
-                    default:
-                        // Handle Video/Audio placeholders
-                        if (conversionType.ToString().Contains("Mp4") || 
-                            conversionType.ToString().Contains("Mp3") || 
-                            conversionType.ToString().Contains("Video") ||
-                            conversionType.ToString().Contains("Audio"))
-                        {
-                             // Mocking success for demo if FFmpeg isn't available, 
-                             // but throwing in production to be honest.
-                             throw new NotSupportedException($"Media conversion ({conversionType}) is being configured on the server. Please check back soon!");
-                        }
+                // Document Conversions
+                case ConversionType.PdfToWord:
+                    await Task.Run(() => ConvertPdfToWord(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.PdfToExcel:
+                    await Task.Run(() => ConvertPdfToExcel(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.WordToPdf:
+                case ConversionType.DocxToPdf:
+                    await Task.Run(() => ConvertWordToPdf(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.Zip:
+                    await Task.Run(() => CreateZip(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.Unzip:
+                    await Task.Run(() => ExtractZip(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.ImageToPdf:
+                case ConversionType.JpgToPdf:
+                    await Task.Run(() => ConvertImageToPdf(sourceFilePath, outputFilePath));
+                    break;
+                
+                // Image Conversions
+                case ConversionType.WebpToPng:
+                case ConversionType.JfifToPng:
+                case ConversionType.HeicToPng:
+                case ConversionType.SvgToPng:
+                case ConversionType.WebpToJpg:
+                case ConversionType.HeicToJpg:
+                case ConversionType.PdfToJpg:
+                case ConversionType.PngToSvg:
+                case ConversionType.ImageConverter:
+                    await _imageService.ConvertImageAsync(sourceFilePath, outputFilePath, conversionType);
+                    break;
+                
+                // Media Conversions
+                case ConversionType.Mp4ToMp3:
+                case ConversionType.VideoToMp3:
+                case ConversionType.Mp3ToOgg:
+                case ConversionType.VideoToGif:
+                case ConversionType.Mp4ToGif:
+                case ConversionType.WebmToGif:
+                case ConversionType.ApngToGif:
+                case ConversionType.GifToMp4:
+                case ConversionType.MovToMp4:
+                case ConversionType.ImageToGif:
+                case ConversionType.MovToGif:
+                case ConversionType.AviToGif:
+                    await _mediaService.ConvertMediaAsync(sourceFilePath, outputFilePath, conversionType);
+                    break;
+                
+                // Text/Data/Code Conversions
+                case ConversionType.JsonToCsv:
+                case ConversionType.XmlToJson:
+                case ConversionType.MarkdownToHtml:
+                case ConversionType.CssMin:
+                case ConversionType.JsBeautify:
+                    await _textDataService.ConvertTextDataAsync(sourceFilePath, outputFilePath, conversionType);
+                    break;
+                    
+                default:
+                    // Basic placeholder for Excel/PPT to PDF since LibreOffice isn't guaranteed
+                    if (conversionType == ConversionType.ExcelToPdf || conversionType == ConversionType.PptToPdf)
+                        throw new NotSupportedException($"Perfect conversion for {conversionType} requires LibreOffice, which is currently unconfigured.");
                         
-                        // For others like EPUB/SVG that require extra libs
-                        throw new ArgumentException($"Conversion implementation for {conversionType} is currently under construction.");
-                }
-            });
+                    throw new ArgumentException($"Conversion implementation for {conversionType} is currently under construction.");
+            }
 
             return outputFilePath;
         }

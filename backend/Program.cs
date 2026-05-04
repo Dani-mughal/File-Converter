@@ -11,6 +11,9 @@ builder.Services.AddEndpointsApiExplorer();
 
 // Dependency Injection
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<MediaConversionService>();
+builder.Services.AddScoped<ImageConversionService>();
+builder.Services.AddScoped<TextDataConversionService>();
 builder.Services.AddScoped<IConversionService, PdfConversionService>();
 
 // Configure limits (100MB for multiple files)

@@ -6,17 +6,24 @@ const api = axios.create({
 });
 
 /**
- * Upload a file for conversion.
- * @param {File} file - The file to convert.
- * @param {string} conversionType - e.g. "pdf-to-word", "pdf-to-excel", "image-to-pdf"
+ * Upload files for conversion.
+ * @param {File[]} files - The files to convert.
+ * @param {string} targetFormat - e.g. "pdf", "docx", "zip", "mp3"
  * @param {function} onProgress - Progress callback (0-100).
  * @param {AbortSignal} signal - Optional abort signal.
  * @returns {Promise<Blob>} The converted file blob.
  */
-export async function convertFile(file, conversionType, onProgress, signal) {
+export async function convertFile(files, targetFormat, onProgress, signal) {
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('conversionType', conversionType);
+  
+  // Append multiple files
+  if (Array.isArray(files)) {
+    files.forEach(f => formData.append('files', f));
+  } else {
+    formData.append('files', files);
+  }
+  
+  formData.append('targetFormat', targetFormat);
 
   const response = await api.post('/convert', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -36,27 +43,32 @@ export async function convertFile(file, conversionType, onProgress, signal) {
 /**
  * Get the output file extension for a conversion type.
  */
-export function getOutputExtension(conversionType) {
+export function getOutputExtension(targetFormat) {
   const map = {
-    'pdf-to-word': '.docx',
-    'pdf-to-excel': '.xlsx',
-    'word-to-pdf': '.pdf',
-    'docx-to-pdf': '.pdf',
-    'ppt-to-pdf': '.pdf',
-    'image-to-pdf': '.pdf',
-    'jpg-to-pdf': '.pdf',
-    'webp-to-png': '.png',
-    'webp-to-jpg': '.jpg',
-    'heic-to-jpg': '.jpg',
-    'heic-to-png': '.png',
-    'png-to-svg': '.svg',
-    'mp4-to-mp3': '.mp3',
-    'mp3-to-ogg': '.ogg',
-    'video-to-gif': '.gif',
+    'docx': '.docx',
+    'pdf': '.pdf',
+    'txt': '.txt',
+    'html': '.html',
+    'xlsx': '.xlsx',
+    'csv': '.csv',
+    'json': '.json',
+    'jpg': '.jpg',
+    'png': '.png',
+    'webp': '.webp',
+    'svg': '.svg',
+    'mp3': '.mp3',
+    'wav': '.wav',
+    'aac': '.aac',
+    'mp4': '.mp4',
+    'avi': '.avi',
+    'mov': '.mov',
+    'gif': '.gif',
     'zip': '.zip',
-    'unzip': '.extracted',
+    'rar': '.rar',
+    '7z': '.7z',
+    'epub': '.epub',
   };
-  return map[conversionType] || '.bin';
+  return map[targetFormat] || `.${targetFormat}`;
 }
 
 /**
