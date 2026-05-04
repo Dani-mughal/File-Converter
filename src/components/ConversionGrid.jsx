@@ -14,8 +14,9 @@ const CATEGORIES = [
   {
     title: 'Video & Audio',
     icon: HiOutlineVideoCamera,
-    color: 'text-rose-500',
-    bg: 'bg-rose-500/10',
+    color: 'text-rose-600 dark:text-rose-400',
+    bg: 'bg-rose-100 dark:bg-rose-500/10',
+    border: 'group-hover:border-rose-200 dark:group-hover:border-rose-500/30',
     links: [
       { label: 'Video Converter', id: 'video' },
       { label: 'Audio Converter', id: 'audio' },
@@ -30,8 +31,9 @@ const CATEGORIES = [
   {
     title: 'Image',
     icon: HiOutlinePhoto,
-    color: 'text-blue-500',
-    bg: 'bg-blue-500/10',
+    color: 'text-blue-600 dark:text-blue-400',
+    bg: 'bg-blue-100 dark:bg-blue-500/10',
+    border: 'group-hover:border-blue-200 dark:group-hover:border-blue-500/30',
     links: [
       { label: 'Image Converter', id: 'image' },
       { label: 'WEBP to PNG', id: 'webp-to-png' },
@@ -46,8 +48,9 @@ const CATEGORIES = [
   {
     title: 'PDF & Documents',
     icon: HiOutlineDocumentText,
-    color: 'text-amber-500',
-    bg: 'bg-amber-500/10',
+    color: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-amber-100 dark:bg-amber-500/10',
+    border: 'group-hover:border-amber-200 dark:group-hover:border-amber-500/30',
     links: [
       { label: 'PDF Converter', id: 'pdf' },
       { label: 'Document Converter', id: 'document' },
@@ -62,8 +65,9 @@ const CATEGORIES = [
   {
     title: 'GIF',
     icon: HiOutlineGif,
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-500/10',
+    color: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-emerald-100 dark:bg-emerald-500/10',
+    border: 'group-hover:border-emerald-200 dark:group-hover:border-emerald-500/30',
     links: [
       { label: 'Video to GIF', id: 'video-to-gif' },
       { label: 'MP4 to GIF', id: 'mp4-to-gif' },
@@ -78,8 +82,9 @@ const CATEGORIES = [
   {
     title: 'Others',
     icon: HiOutlineSquares2X2,
-    color: 'text-purple-500',
-    bg: 'bg-purple-500/10',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bg: 'bg-indigo-100 dark:bg-indigo-500/10',
+    border: 'group-hover:border-indigo-200 dark:group-hover:border-indigo-500/30',
     links: [
       { label: 'Unit Converter', id: 'unit' },
       { label: 'Time Converter', id: 'time' },
@@ -93,20 +98,44 @@ const CATEGORIES = [
   }
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' }
+  }
+};
+
 export default function ConversionGrid() {
   const { darkMode } = useTheme();
 
   return (
-    <section id="conversions" className={`py-24 ${darkMode ? 'bg-slate-950' : 'bg-white'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+    <section id="conversions" className={`py-24 relative overflow-hidden ${darkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
+      <div className="absolute inset-0 pointer-events-none opacity-40">
+        <div className={`absolute top-0 right-1/4 w-96 h-96 rounded-full blur-[100px] ${darkMode ? 'bg-indigo-900/20' : 'bg-indigo-200/40'}`} />
+        <div className={`absolute bottom-0 left-1/4 w-96 h-96 rounded-full blur-[100px] ${darkMode ? 'bg-sky-900/20' : 'bg-sky-200/40'}`} />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-20">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className={`text-3xl md:text-4xl font-extrabold mb-4 ${darkMode ? 'text-white' : 'text-slate-900'}`}
+            className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}
           >
-            All Conversion Tools
+            Universal File Conversion
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -115,51 +144,55 @@ export default function ConversionGrid() {
             transition={{ delay: 0.1 }}
             className={`max-w-2xl mx-auto text-lg ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}
           >
-            Explore our comprehensive suite of online file converters. No installation required, completely free, and secure.
+            A professional suite of conversion tools. Fast, secure, and entirely online with no software installation required.
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
-          {CATEGORIES.map((cat, idx) => (
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"
+        >
+          {CATEGORIES.map((cat) => (
             <motion.div
               key={cat.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className={`flex flex-col rounded-3xl p-6 transition-all duration-300 ${
+              variants={itemVariants}
+              whileHover={{ y: -5 }}
+              className={`group flex flex-col rounded-2xl p-6 transition-all duration-300 ${
                 darkMode 
-                  ? 'bg-slate-900/40 border border-slate-800 hover:border-slate-700' 
-                  : 'bg-slate-50 border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md'
-              }`}
+                  ? 'bg-slate-900/60 border border-slate-800/50 backdrop-blur-sm shadow-xl shadow-black/20' 
+                  : 'bg-white border border-slate-200 shadow-sm hover:shadow-lg'
+              } ${cat.border}`}
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cat.bg} ${cat.color}`}>
+              <div className="flex items-center gap-4 mb-6 pb-4 border-b border-slate-200/50 dark:border-slate-800/50">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${cat.bg} ${cat.color}`}>
                   <cat.icon className="w-6 h-6" />
                 </div>
-                <h3 className={`font-bold text-sm uppercase tracking-wider ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+                <h3 className={`font-semibold text-sm tracking-wide ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
                   {cat.title}
                 </h3>
               </div>
 
-              <ul className="space-y-3">
+              <ul className="space-y-3 flex-1">
                 {cat.links.map((link) => (
                   <li key={link.id}>
                     <Link 
                       to={`/convert?type=${link.id}`} 
-                      className={`group flex items-center justify-between text-[13px] transition-colors ${
+                      className={`group/link flex items-center justify-between text-[13px] font-medium transition-colors ${
                         darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                       }`}
                     >
                       <span>{link.label}</span>
-                      <HiChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary-500" />
+                      <HiChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all text-indigo-500" />
                     </Link>
                   </li>
                 ))}
               </ul>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -24,7 +24,7 @@ export default function ConvertPage() {
   const [searchParams] = useSearchParams();
   const { history, addEntry, clearHistory, removeEntry } = useFileHistory();
 
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [fileError, setFileError] = useState(null);
   const [conversionType, setConversionType] = useState(searchParams.get('type') || '');
   const [step, setStep] = useState(STEPS.UPLOAD);
@@ -42,19 +42,9 @@ export default function ConvertPage() {
     };
   }, [downloadUrl]);
 
-  const handleFileSelect = useCallback((selectedFile, error) => {
-    setFileError(error);
-    setFile(selectedFile);
-  }, []);
-
-  const handleFileRemove = useCallback(() => {
-    setFile(null);
-    setFileError(null);
-  }, []);
-
   const handleConvert = async () => {
-    if (!file) {
-      toast.error('Please upload a file first.');
+    if (files.length === 0) {
+      toast.error('Please upload at least one file.');
       return;
     }
     if (!conversionType) {
@@ -78,7 +68,7 @@ export default function ConvertPage() {
       }, 100);
 
       const blob = await convertFile(
-        file,
+        files,
         conversionType,
         (uploadPct) => {
           clearInterval(uploadInterval);
@@ -96,8 +86,10 @@ export default function ConvertPage() {
       }
 
       const ext = getOutputExtension(conversionType);
-      const baseName = file.name.replace(/\.[^.]+$/, '');
-      const outName = `${baseName}-converted${ext}`;
+      const firstFileName = files[0].name.replace(/\.[^.]+$/, '');
+      const outName = files.length > 1 
+        ? `converted_files_${Date.now()}${ext}`
+        : `${firstFileName}-converted${ext}`;
 
       const url = URL.createObjectURL(blob);
       setDownloadUrl(url);
@@ -106,22 +98,21 @@ export default function ConvertPage() {
       setProgress(100);
 
       addEntry({
-        fileName: file.name,
-        fileSize: file.size,
+        fileName: files.length > 1 ? `${files.length} Files` : files[0].name,
+        fileSize: files.reduce((acc, f) => acc + f.size, 0),
         conversionType,
         status: 'success',
       });
 
-      toast.success('File converted successfully!');
+      toast.success('Conversion successful!');
     } catch (err) {
       if (err.name === 'CanceledError' || err.name === 'AbortError') return;
 
       let msg = 'Conversion failed. Please try again.';
       if (err.response) {
-        if (err.response.status === 413) msg = 'File too large for the server.';
+        if (err.response.status === 413) msg = 'Files too large for the server.';
         else if (err.response.status === 415) msg = 'Unsupported file format.';
         else if (err.response.status === 500) msg = 'Server error. Please try again later.';
-        // Try to read error message from blob
         try {
           const text = await err.response.data.text();
           const json = JSON.parse(text);
@@ -136,8 +127,8 @@ export default function ConvertPage() {
       toast.error(msg);
 
       addEntry({
-        fileName: file.name,
-        fileSize: file.size,
+        fileName: files.length > 1 ? `${files.length} Files` : files[0].name,
+        fileSize: files.reduce((acc, f) => acc + f.size, 0),
         conversionType,
         status: 'error',
       });
@@ -146,7 +137,7 @@ export default function ConvertPage() {
 
   const handleReset = () => {
     if (downloadUrl) URL.revokeObjectURL(downloadUrl);
-    setFile(null);
+    setFiles([]);
     setFileError(null);
     setConversionType('');
     setStep(STEPS.UPLOAD);
@@ -156,7 +147,7 @@ export default function ConvertPage() {
     setErrorMessage('');
   };
 
-  const canConvert = file && conversionType && step === STEPS.UPLOAD;
+  const canConvert = files.length > 0 && conversionType && step === STEPS.UPLOAD;
 
   return (
     <div className={`min-h-screen pt-24 pb-16 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -193,16 +184,16 @@ export default function ConvertPage() {
                 className="space-y-6"
               >
                 <FileUpload
-                  file={file}
-                  onFileSelect={handleFileSelect}
-                  onFileRemove={handleFileRemove}
+                  files={files}
+                  onFilesChange={setFiles}
                   error={fileError}
+                  onError={setFileError}
                 />
 
                 <ConversionSelector
                   selected={conversionType}
                   onSelect={setConversionType}
-                  fileType={file?.type}
+                  files={files}
                 />
 
                 <motion.button
@@ -219,8 +210,8 @@ export default function ConvertPage() {
                       : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   }`}
                 >
-                  {!file
-                    ? 'Upload a file to begin'
+                  {files.length === 0
+                    ? 'Upload files to begin'
                     : !conversionType
                     ? 'Select a conversion type'
                     : 'Convert Now'}

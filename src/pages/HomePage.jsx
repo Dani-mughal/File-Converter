@@ -2,44 +2,70 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import {
-  HiOutlineDocumentText,
-  HiOutlineTableCells,
-  HiOutlinePhoto,
   HiOutlineBolt,
   HiOutlineShieldCheck,
   HiOutlineCloud,
   HiOutlineLockClosed,
-  HiOutlineArrowPathRoundedSquare
+  HiOutlineArrowPathRoundedSquare,
+  HiOutlineQueueList,
+  HiOutlineArchiveBox
 } from 'react-icons/hi2';
 import ConversionGrid from '../components/ConversionGrid';
 
 const FEATURES = [
   {
-    icon: HiOutlineBolt,
-    title: 'Lightning Fast',
-    description: 'Convert files in seconds with our optimized processing engine.',
+    icon: HiOutlineQueueList,
+    title: '1000+ Combinations',
+    description: 'Support for nearly every file format including PDF, DOCX, XLSX, and more.',
     color: 'from-amber-400 to-orange-500',
     bgLight: 'bg-amber-50',
     bgDark: 'bg-amber-500/10',
     textColor: 'text-amber-500',
   },
   {
+    icon: HiOutlineBolt,
+    title: 'Fast Processing',
+    description: 'Lightning-fast cloud servers process your files in seconds.',
+    color: 'from-sky-400 to-blue-500',
+    bgLight: 'bg-sky-50',
+    bgDark: 'bg-sky-500/10',
+    textColor: 'text-sky-500',
+  },
+  {
     icon: HiOutlineShieldCheck,
     title: 'Secure & Private',
-    description: 'Your files are encrypted and automatically deleted after conversion.',
+    description: 'We prioritize your privacy. All files are automatically deleted after 30 minutes.',
     color: 'from-emerald-400 to-teal-500',
     bgLight: 'bg-emerald-50',
     bgDark: 'bg-emerald-500/10',
     textColor: 'text-emerald-500',
   },
   {
+    icon: HiOutlineQueueList,
+    title: 'Batch Conversion',
+    description: 'Upload and convert multiple files simultaneously with ease.',
+    color: 'from-purple-400 to-indigo-500',
+    bgLight: 'bg-purple-50',
+    bgDark: 'bg-purple-500/10',
+    textColor: 'text-purple-500',
+  },
+  {
+    icon: HiOutlineArchiveBox,
+    title: 'ZIP & Unzip Support',
+    description: 'Compress files into ZIP archives or extract them instantly.',
+    color: 'from-rose-400 to-red-500',
+    bgLight: 'bg-rose-50',
+    bgDark: 'bg-rose-500/10',
+    textColor: 'text-rose-500',
+  },
+  {
     icon: HiOutlineCloud,
-    title: 'Cloud Powered',
-    description: 'No software to install. Convert directly from your browser.',
-    color: 'from-sky-400 to-blue-500',
-    bgLight: 'bg-sky-50',
-    bgDark: 'bg-sky-500/10',
-    textColor: 'text-sky-500',
+    title: 'No Software Needed',
+    description: '100% online. No installation required, works in any browser.',
+    color: 'from-cyan-400 to-teal-500',
+    bgLight: 'bg-cyan-50',
+    bgDark: 'bg-cyan-500/10',
+    textColor: 'text-cyan-500',
   },
 ];
 
@@ -52,7 +78,7 @@ const TRUST_POINTS = [
   {
     icon: HiOutlineArrowPathRoundedSquare,
     title: 'Automatic Deletion',
-    text: 'We respect your data. All uploaded files are permanently deleted from our servers after 24 hours.'
+    text: 'We respect your data. All uploaded files are permanently deleted from our servers after 30 minutes.'
   },
   {
     icon: HiOutlineShieldCheck,
@@ -68,7 +94,6 @@ export default function HomePage() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-32 pb-24 sm:pt-48 sm:pb-36">
-        {/* Background Effects */}
         <div className="absolute inset-0 pointer-events-none">
           <div className={`absolute top-0 left-0 w-full h-full opacity-30 ${darkMode ? 'bg-[radial-gradient(circle_at_top_right,#4f46e5_0%,transparent_50%)]' : 'bg-[radial-gradient(circle_at_top_right,#e0e7ff_0%,transparent_50%)]'}`} />
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-[120px] animate-float" />
@@ -104,8 +129,8 @@ export default function HomePage() {
               darkMode ? 'text-white' : 'text-slate-900'
             }`}
           >
-            The Ultimate <br className="hidden sm:block" />
-            <span className="gradient-text drop-shadow-sm">File Transformer</span>
+            Convert Any File, <br className="hidden sm:block" />
+            <span className="gradient-text drop-shadow-sm">Anytime</span>
           </motion.h1>
 
           <motion.p
@@ -116,8 +141,8 @@ export default function HomePage() {
               darkMode ? 'text-slate-400' : 'text-slate-600'
             }`}
           >
-            Switch between formats instantly. Secure, fast, and 100% free. 
-            No software installation required.
+            PDF, DOCX, XLSX, PPTX, JPG, PNG, MP4, MP3, ZIP, HTML, CSV and more.
+            Fast, secure, and entirely online.
           </motion.p>
 
           <motion.div
@@ -192,14 +217,14 @@ export default function HomePage() {
             className="text-center mb-20"
           >
             <h2 className={`text-4xl sm:text-5xl font-black mb-6 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-              Why Choose Our Platform?
+              The World's Most Powerful Converter
             </h2>
             <p className={`mt-4 text-xl max-w-2xl mx-auto ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              Built with cutting-edge technology to give you the best experience possible.
+              Everything you need to process files professionally, all in one place.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {FEATURES.map((f, i) => {
               const Icon = f.icon;
               return (
@@ -208,7 +233,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.15, duration: 0.5 }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={`group relative p-10 rounded-[2.5rem] transition-all duration-500 ${
                     darkMode
                       ? 'bg-slate-900/40 border border-white/5 hover:border-primary-500/30'

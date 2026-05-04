@@ -23,8 +23,11 @@ const ACCEPTED_TYPES = {
   'text/csv': ['.csv'],
   'image/jpeg': ['.jpeg', '.jpg'],
   'image/png': ['.png'],
+  'video/mp4': ['.mp4'],
+  'audio/mpeg': ['.mp3'],
   'application/zip': ['.zip'],
   'application/x-zip-compressed': ['.zip'],
+  'text/html': ['.html'],
 };
 
 function formatSize(bytes) {
@@ -34,13 +37,15 @@ function formatSize(bytes) {
 }
 
 function getFileIcon(type) {
-  if (type?.includes('pdf')) return <HiOutlineDocument className="w-6 h-6" />;
-  if (type?.includes('image')) return <HiOutlinePhoto className="w-6 h-6" />;
-  if (type?.includes('zip')) return <HiOutlineDocument className="w-6 h-6" />;
-  return <HiOutlineDocument className="w-6 h-6" />;
+  if (type?.includes('pdf')) return <HiOutlineDocument className="w-5 h-5 text-red-500" />;
+  if (type?.includes('image')) return <HiOutlinePhoto className="w-5 h-5 text-blue-500" />;
+  if (type?.includes('zip')) return <HiOutlineDocument className="w-5 h-5 text-yellow-600" />;
+  if (type?.includes('video')) return <HiOutlineDocument className="w-5 h-5 text-rose-500" />;
+  if (type?.includes('audio')) return <HiOutlineDocument className="w-5 h-5 text-purple-500" />;
+  return <HiOutlineDocument className="w-5 h-5 text-slate-500" />;
 }
 
-export default function FileUpload({ file, onFileSelect, onFileRemove, error }) {
+export default function FileUpload({ files = [], onFilesChange, error, onError }) {
   const { darkMode } = useTheme();
 
   const onDrop = useCallback(
@@ -48,32 +53,39 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
       if (rejectedFiles.length > 0) {
         const err = rejectedFiles[0].errors[0];
         if (err.code === 'file-too-large') {
-          onFileSelect(null, `File exceeds ${formatSize(FILE_SIZE_LIMIT)} limit.`);
+          onError(`File exceeds ${formatSize(FILE_SIZE_LIMIT)} limit.`);
         } else if (err.code === 'file-invalid-type') {
-          onFileSelect(null, 'Unsupported file type. Please upload a supported document, image, or zip archive.');
+          onError('Unsupported file type. Please upload a supported document, image, or media file.');
         } else {
-          onFileSelect(null, err.message);
+          onError(err.message);
         }
         return;
       }
       if (acceptedFiles.length > 0) {
-        onFileSelect(acceptedFiles[0], null);
+        onError(null);
+        onFilesChange([...files, ...acceptedFiles]);
       }
     },
-    [onFileSelect]
+    [files, onFilesChange, onError]
   );
+
+  const removeFile = (index) => {
+    const newFiles = [...files];
+    newFiles.splice(index, 1);
+    onFilesChange(newFiles);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: ACCEPTED_TYPES,
     maxSize: FILE_SIZE_LIMIT,
-    multiple: false,
+    multiple: true,
   });
 
   return (
     <div className="w-full">
       <AnimatePresence mode="wait">
-        {!file ? (
+        {files.length === 0 ? (
           <motion.div
             key="dropzone"
             initial={{ opacity: 0, y: 20 }}
@@ -96,7 +108,6 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
             >
               <input {...getInputProps()} id="file-input" />
 
-              {/* Animated Background Orbs */}
               <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
                 <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl transition-opacity duration-500 ${
                   isDragActive ? 'opacity-30' : 'opacity-0 group-hover:opacity-15'
@@ -134,26 +145,26 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
                     darkMode ? 'text-white' : 'text-slate-800'
                   }`}
                 >
-                  {isDragActive ? 'Drop your file here' : 'Drag & drop your file'}
+                  {isDragActive ? 'Drop files here' : 'Drag & drop files'}
                 </h3>
                 <p className={`text-sm mb-4 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                   or{' '}
                   <span className="text-primary-500 font-medium hover:underline">browse</span>{' '}
-                  to choose a file
+                  to choose files
                 </p>
                 <div
-                  className={`inline-flex flex-wrap items-center justify-center gap-2 text-xs ${
+                  className={`inline-flex flex-wrap items-center justify-center gap-2 text-[11px] ${
                     darkMode ? 'text-slate-500' : 'text-slate-400'
                   }`}
                 >
-                  {['PDF', 'DOC', 'DOCX', 'PPT', 'XLS', 'CSV', 'ZIP', 'IMG'].map((ext) => (
+                  {['PDF', 'DOCX', 'XLSX', 'JPG', 'PNG', 'MP4', 'ZIP'].map((ext) => (
                     <span
                       key={ext}
-                      className={`px-2.5 py-1 rounded-lg ${
+                      className={`px-2 py-0.5 rounded-md ${
                         darkMode ? 'bg-slate-700/50' : 'bg-slate-100'
                       }`}
                     >
-                      .{ext.toLowerCase()}
+                      {ext}
                     </span>
                   ))}
                   <span>• Max {formatSize(FILE_SIZE_LIMIT)}</span>
@@ -173,54 +184,82 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            id="file-preview"
-            className={`rounded-2xl p-6 transition-colors ${
-              darkMode ? 'bg-slate-800/50 border border-slate-700/50' : 'bg-slate-50 border border-slate-200'
-            }`}
+            className="flex flex-col gap-3"
           >
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className={`text-sm font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                Selected Files ({files.length})
+              </h4>
+              <button 
+                onClick={() => onFilesChange([])}
+                className={`text-xs hover:underline ${darkMode ? 'text-red-400' : 'text-red-500'}`}
+              >
+                Clear All
+              </button>
+            </div>
+            
+            <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-2 space-y-2">
+              {files.map((file, idx) => (
                 <div
-                  className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${
-                    darkMode ? 'bg-primary-500/15 text-primary-400' : 'bg-primary-50 text-primary-600'
+                  key={`${file.name}-${idx}`}
+                  className={`flex items-center justify-between p-3 rounded-xl transition-colors ${
+                    darkMode ? 'bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800' : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  {getFileIcon(file.type)}
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                        darkMode ? 'bg-slate-900' : 'bg-white shadow-sm'
+                      }`}
+                    >
+                      {getFileIcon(file.type)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`text-sm font-medium truncate ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                        {file.name}
+                      </p>
+                      <p className={`text-xs mt-0.5 ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                        {formatSize(file.size)}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeFile(idx)}
+                    className={`p-2 rounded-lg transition-all shrink-0 ml-2 ${
+                      darkMode
+                        ? 'text-slate-400 hover:text-red-400 hover:bg-red-400/10'
+                        : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
+                    }`}
+                    aria-label="Remove file"
+                  >
+                    <HiOutlineXMark className="w-4 h-4" />
+                  </button>
                 </div>
+              ))}
+            </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className={`font-medium truncate ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-                    {file.name}
-                  </p>
-                  <p className={`text-sm mt-0.5 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {formatSize(file.size)} • {file.type || 'Unknown type'}
-                  </p>
-                </div>
-
-                <button
-                  onClick={onFileRemove}
-                  id="remove-file-btn"
-                  className={`p-2 rounded-xl transition-all cursor-pointer ${
-                    darkMode
-                      ? 'text-slate-400 hover:text-red-400 hover:bg-red-400/10'
-                      : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
-                  }`}
-                  aria-label="Remove file"
-                >
-                  <HiOutlineXMark className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className={`flex items-center justify-center gap-1.5 text-xs font-medium opacity-60 ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                <Lock className="w-3 h-3" />
-                <span>Your files are private and auto-deleted</span>
-              </div>
+            {/* Add more files dropzone */}
+            <div
+              {...getRootProps()}
+              className={`mt-2 cursor-pointer rounded-xl border border-dashed p-4 text-center transition-all duration-300 ${
+                isDragActive
+                  ? darkMode
+                    ? 'border-primary-400 bg-primary-500/10'
+                    : 'border-primary-500 bg-primary-50'
+                  : darkMode
+                  ? 'border-slate-700 hover:border-slate-600 bg-slate-800/20'
+                  : 'border-slate-300 hover:border-slate-400 bg-slate-50/50'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                + Add more files
+              </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Error */}
       <AnimatePresence>
         {error && (
           <motion.p
@@ -228,7 +267,6 @@ export default function FileUpload({ file, onFileSelect, onFileRemove, error }) 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             className="mt-3 text-sm text-red-500 font-medium flex items-center gap-1.5"
-            id="file-error"
           >
             <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
