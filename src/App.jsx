@@ -12,10 +12,16 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col transition-colors duration-300 ${
+      className={`min-h-screen flex flex-col transition-colors duration-300 relative ${
         darkMode ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'
       }`}
     >
+      {/* Dynamic Grid Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 grid-background" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
+      </div>
+
       <Navbar />
       <main className="flex-1">
         <Routes>

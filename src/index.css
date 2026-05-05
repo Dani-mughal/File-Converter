@@ -99,6 +99,21 @@
   .animate-pulse-slow {
     animation: pulse 3s ease-in-out infinite;
   }
+
+  .grid-background {
+    --grid-color: rgba(99, 102, 241, 0.15);
+    --grid-size: 40px;
+    background-image: 
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: var(--grid-size) var(--grid-size);
+    mask-image: radial-gradient(ellipse at center, black, transparent 95%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 95%);
+  }
+
+  .dark .grid-background {
+    --grid-color: rgba(168, 85, 247, 0.2);
+  }
 }
 
 /* ─── Keyframes ─── */
