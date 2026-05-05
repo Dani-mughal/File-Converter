@@ -29,6 +29,18 @@ namespace ConvertHub.Api.Controllers
             _storageService = storageService;
         }
 
+        [HttpGet]
+        public IActionResult Get()
+        {
+            return Ok(new { status = "online", message = "ConvertHub API is running." });
+        }
+
+        [HttpGet("health")]
+        public IActionResult Health()
+        {
+            return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Convert([FromForm] List<IFormFile> files, [FromForm] string targetFormat)
         {

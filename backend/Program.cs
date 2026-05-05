@@ -44,10 +44,16 @@ if (!Directory.Exists(tempDir))
 }
 
 app.UseExceptionHandling();
+
+// Routing and CORS
+app.UseRouting();
 app.UseCors("AllowAll");
 
 app.MapControllers();
 
+// Health check endpoint at root level
+app.MapGet("/", () => Results.Ok(new { status = "online", service = "ConvertHub API" }));
+
 // Use dynamic port for Render
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://0.0.0.0:{port}");
