@@ -11,6 +11,7 @@ import {
   HiOutlineArchiveBox
 } from 'react-icons/hi2';
 import ConversionGrid from '../components/ConversionGrid';
+import AdBanner from '../components/AdBanner';
 
 const FEATURES = [
   {
@@ -178,6 +179,11 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Hero Ad */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdBanner slot="XXXXXXXXXX" />
+      </div>
+
       {/* Trust Section */}
       <section className={`py-16 ${darkMode ? 'bg-slate-900/30' : 'bg-slate-100/50'} border-y ${darkMode ? 'border-white/5' : 'border-black/5'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -206,6 +212,11 @@ export default function HomePage() {
 
       {/* Conversion Grid Component */}
       <ConversionGrid />
+
+      {/* Middle Ad */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdBanner slot="YYYYYYYYYY" />
+      </div>
 
       {/* Features Section */}
       <section className={`py-28 ${darkMode ? 'bg-slate-950' : 'bg-white'}`}>

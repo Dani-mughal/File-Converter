@@ -11,6 +11,7 @@ import ProgressBar from '../components/ProgressBar';
 import ResultDownload from '../components/ResultDownload';
 import FileHistoryPanel from '../components/FileHistoryPanel';
 import SecurityFeatures from '../components/SecurityFeatures';
+import AdBanner from '../components/AdBanner';
 
 const STEPS = {
   UPLOAD: 'upload',
@@ -290,6 +291,9 @@ export default function ConvertPage() {
               onRemove={removeEntry}
             />
           )}
+
+          {/* Page Ad */}
+          <AdBanner slot="ZZZZZZZZZZ" />
         </div>
       </div>
     </div>
