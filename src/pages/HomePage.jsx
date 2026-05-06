@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
@@ -12,6 +13,7 @@ import {
 } from 'react-icons/hi2';
 import ConversionGrid from '../components/ConversionGrid';
 import AdBanner from '../components/AdBanner';
+
 
 const FEATURES = [
   {
@@ -90,6 +92,20 @@ const TRUST_POINTS = [
 
 export default function HomePage() {
   const { darkMode } = useTheme();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
+  const gridRef = useRef(null);
+
+  const handleSearch = () => {
+    setActiveSearch(searchQuery);
+    if (gridRef.current) {
+      gridRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
 
   return (
     <div className="min-h-screen">
@@ -142,7 +158,7 @@ export default function HomePage() {
               darkMode ? 'text-slate-400' : 'text-slate-600'
             }`}
           >
-            PDF, DOCX, XLSX, PPTX, JPG, PNG, MP4, MP3, ZIP, HTML, CSV and more.
+            Universal file converter for documents, images, video, audio, archives, and more.
             Fast, secure, and entirely online.
           </motion.p>
 
@@ -150,6 +166,40 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
+            className="mt-12 max-w-2xl mx-auto"
+          >
+            <div className="relative group">
+              <div className="absolute inset-0 bg-primary-500/20 blur-2xl group-hover:bg-primary-500/30 transition-all duration-500 rounded-full" />
+              <div className={`relative flex items-center p-2 rounded-2xl border ${darkMode ? 'bg-slate-900/80 border-white/10' : 'bg-white/80 border-slate-200'} backdrop-blur-xl shadow-2xl shadow-black/5`}>
+                <div className="pl-4 pr-3">
+                  <svg className={`w-6 h-6 ${darkMode ? 'text-slate-400' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input 
+                  type="text"
+                  id="hero-search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search 1000+ conversion tools (e.g. PDF to Word)"
+                  className="w-full bg-transparent border-none focus:ring-0 text-lg py-3 placeholder:text-slate-500 font-medium outline-none"
+                />
+                <button
+                  onClick={handleSearch}
+                  id="hero-search-btn"
+                  className="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary-500/25 active:scale-95 whitespace-nowrap"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
             className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-6"
           >
             <Link
@@ -179,10 +229,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Hero Ad */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AdBanner slot="XXXXXXXXXX" />
-      </div>
+
 
       {/* Trust Section */}
       <section className={`py-16 ${darkMode ? 'bg-slate-900/30' : 'bg-slate-100/50'} border-y ${darkMode ? 'border-white/5' : 'border-black/5'}`}>
@@ -211,12 +258,11 @@ export default function HomePage() {
       </section>
 
       {/* Conversion Grid Component */}
-      <ConversionGrid />
-
-      {/* Middle Ad */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AdBanner slot="YYYYYYYYYY" />
+      <div ref={gridRef}>
+        <ConversionGrid externalSearch={activeSearch} />
       </div>
+
+
 
       {/* Features Section */}
       <section className={`py-28 ${darkMode ? 'bg-slate-950' : 'bg-white'}`}>
