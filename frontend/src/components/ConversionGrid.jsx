@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { 
@@ -7,128 +8,158 @@ import {
   HiOutlineDocumentText, 
   HiOutlineGif, 
   HiOutlineSquares2X2,
-  HiChevronRight
+  HiChevronRight,
+  HiOutlineArchiveBox,
+  HiOutlineBookOpen,
+  HiOutlineCodeBracket,
+  HiOutlineCube,
+  HiOutlineWrenchScrewdriver
 } from 'react-icons/hi2';
 
 const CATEGORIES = [
   {
+    id: 'all',
+    title: 'All Tools',
+    icon: HiOutlineSquares2X2,
+  },
+  {
+    id: 'document',
+    title: 'Documents',
+    icon: HiOutlineDocumentText,
+    color: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-amber-100 dark:bg-amber-500/10',
+    links: [
+      { label: 'PDF to Word', id: 'pdf-to-docx' },
+      { label: 'PDF to Excel', id: 'pdf-to-xlsx' },
+      { label: 'Word to PDF', id: 'docx-to-pdf' },
+      { label: 'Excel to PDF', id: 'xlsx-to-pdf' },
+      { label: 'PPT to PDF', id: 'pptx-to-pdf' },
+      { label: 'PPT to JPG', id: 'ppt-to-jpg' },
+      { label: 'PPT to PNG', id: 'ppt-to-png' },
+      { label: 'PDF to JPG', id: 'pdf-to-jpg' },
+      { label: 'TXT to PDF', id: 'txt-to-pdf' },
+      { label: 'HTML to PDF', id: 'html-to-pdf' }
+    ]
+  },
+  {
+    id: 'image',
+    title: 'Images & Design',
+    icon: HiOutlinePhoto,
+    color: 'text-blue-600 dark:text-blue-400',
+    bg: 'bg-blue-100 dark:bg-blue-500/10',
+    links: [
+      { label: 'JPG to PNG', id: 'jpg-to-png' },
+      { label: 'PNG to JPG', id: 'png-to-jpg' },
+      { label: 'SVG to PNG', id: 'svg-to-png' },
+      { label: 'SVG to JPG', id: 'svg-to-jpg' },
+      { label: 'SVG to PDF', id: 'svg-to-pdf' },
+      { label: 'HEIC to JPG', id: 'heic-to-jpg' },
+      { label: 'WEBP to PNG', id: 'webp-to-png' },
+      { label: 'PSD to JPG', id: 'psd-to-jpg' },
+      { label: 'AI to SVG', id: 'ai-to-svg' },
+      { label: 'EPS to PDF', id: 'eps-to-pdf' }
+    ]
+  },
+  {
+    id: 'video',
     title: 'Video & Audio',
     icon: HiOutlineVideoCamera,
     color: 'text-rose-600 dark:text-rose-400',
     bg: 'bg-rose-100 dark:bg-rose-500/10',
-    border: 'group-hover:border-rose-200 dark:group-hover:border-rose-500/30',
     links: [
-      { label: 'Video Converter', id: 'video' },
-      { label: 'Audio Converter', id: 'audio' },
-      { label: 'MP3 Converter', id: 'mp3' },
       { label: 'MP4 to MP3', id: 'mp4-to-mp3' },
-      { label: 'Video to MP3', id: 'video-to-mp3' },
-      { label: 'MP4 Converter', id: 'mp4' },
+      { label: 'Video to GIF', id: 'video-to-gif' },
       { label: 'MOV to MP4', id: 'mov-to-mp4' },
-      { label: 'MP3 to OGG', id: 'mp3-to-ogg' }
+      { label: 'AVI to MP4', id: 'avi-to-mp4' },
+      { label: 'WAV to MP3', id: 'wav-to-mp3' },
+      { label: 'MP3 to OGG', id: 'mp3-to-ogg' },
+      { label: 'MKV to MP4', id: 'mkv-to-mp4' },
+      { label: 'FLAC to MP3', id: 'flac-to-mp3' }
     ]
   },
   {
-    title: 'Image',
-    icon: HiOutlinePhoto,
-    color: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-100 dark:bg-blue-500/10',
-    border: 'group-hover:border-blue-200 dark:group-hover:border-blue-500/30',
+    id: 'archive',
+    title: 'Archive & Ebooks',
+    icon: HiOutlineArchiveBox,
+    color: 'text-purple-600 dark:text-purple-400',
+    bg: 'bg-purple-100 dark:bg-purple-500/10',
     links: [
-      { label: 'Image Converter', id: 'image' },
-      { label: 'WEBP to PNG', id: 'webp-to-png' },
-      { label: 'JFIF to PNG', id: 'jfif-to-png' },
-      { label: 'PNG to SVG', id: 'png-to-svg' },
-      { label: 'HEIC to JPG', id: 'heic-to-jpg' },
-      { label: 'HEIC to PNG', id: 'heic-to-png' },
-      { label: 'WEBP to JPG', id: 'webp-to-jpg' },
-      { label: 'SVG Converter', id: 'svg' }
-    ]
-  },
-  {
-    title: 'PDF & Documents',
-    icon: HiOutlineDocumentText,
-    color: 'text-amber-600 dark:text-amber-400',
-    bg: 'bg-amber-100 dark:bg-amber-500/10',
-    border: 'group-hover:border-amber-200 dark:group-hover:border-amber-500/30',
-    links: [
-      { label: 'PDF Converter', id: 'pdf' },
-      { label: 'Document Converter', id: 'document' },
-      { label: 'Ebook Converter', id: 'ebook' },
-      { label: 'PDF to Word', id: 'pdf-to-word' },
-      { label: 'PDF to JPG', id: 'pdf-to-jpg' },
-      { label: 'PDF to EPUB', id: 'pdf-to-epub' },
+      { label: 'ZIP to RAR', id: 'zip-to-rar' },
+      { label: 'RAR to ZIP', id: 'rar-to-zip' },
+      { label: '7Z to ZIP', id: '7z-to-zip' },
       { label: 'EPUB to PDF', id: 'epub-to-pdf' },
-      { label: 'HEIC to PDF', id: 'heic-to-pdf' }
+      { label: 'MOBI to EPUB', id: 'mobi-to-epub' },
+      { label: 'AZW3 to PDF', id: 'azw3-to-pdf' },
+      { label: 'DJVU to PDF', id: 'djvu-to-pdf' },
+      { label: 'TAR to GZ', id: 'tar-to-gz' }
     ]
   },
   {
-    title: 'GIF',
-    icon: HiOutlineGif,
+    id: 'code',
+    title: 'Code & Data',
+    icon: HiOutlineCodeBracket,
     color: 'text-emerald-600 dark:text-emerald-400',
     bg: 'bg-emerald-100 dark:bg-emerald-500/10',
-    border: 'group-hover:border-emerald-200 dark:group-hover:border-emerald-500/30',
     links: [
-      { label: 'Video to GIF', id: 'video-to-gif' },
-      { label: 'MP4 to GIF', id: 'mp4-to-gif' },
-      { label: 'WEBM to GIF', id: 'webm-to-gif' },
-      { label: 'APNG to GIF', id: 'apng-to-gif' },
-      { label: 'GIF to MP4', id: 'gif-to-mp4' },
-      { label: 'GIF to APNG', id: 'gif-to-apng' },
-      { label: 'Image to GIF', id: 'image-to-gif' },
-      { label: 'MOV to GIF', id: 'mov-to-gif' }
+      { label: 'JSON to CSV', id: 'json-to-csv' },
+      { label: 'CSV to JSON', id: 'csv-to-json' },
+      { label: 'XML to JSON', id: 'xml-to-json' },
+      { label: 'YAML to JSON', id: 'yaml-to-json' },
+      { label: 'Markdown to HTML', id: 'markdown-to-html' },
+      { label: 'SQL to CSV', id: 'sql-to-csv' },
+      { label: 'JSON to YAML', id: 'json-to-yaml' },
+      { label: 'CSV to SQL', id: 'csv-to-sql' }
     ]
   },
   {
-    title: 'Others',
-    icon: HiOutlineSquares2X2,
-    color: 'text-indigo-600 dark:text-indigo-400',
-    bg: 'bg-indigo-100 dark:bg-indigo-500/10',
-    border: 'group-hover:border-indigo-200 dark:group-hover:border-indigo-500/30',
+    id: 'cad',
+    title: 'CAD & 3D',
+    icon: HiOutlineCube,
+    color: 'text-cyan-600 dark:text-cyan-400',
+    bg: 'bg-cyan-100 dark:bg-cyan-500/10',
     links: [
-      { label: 'Unit Converter', id: 'unit' },
-      { label: 'Time Converter', id: 'time' },
-      { label: 'Archive Converter', id: 'archive' },
-      { label: 'JSON to CSV', id: 'json-to-csv' },
-      { label: 'XML to JSON', id: 'xml-to-json' },
-      { label: 'Markdown to HTML', id: 'markdown-to-html' },
-      { label: 'CSS Minifier', id: 'css-min' },
-      { label: 'JS Beautifier', id: 'js-beautify' }
+      { label: 'STL to OBJ', id: 'stl-to-obj' },
+      { label: 'OBJ to GLTF', id: 'obj-to-gltf' },
+      { label: 'DWG to DXF', id: 'dwg-to-dxf' },
+      { label: 'DXF to SVG', id: 'dxf-to-svg' },
+      { label: 'STL to FBX', id: 'stl-to-fbx' },
+      { label: 'GLB to GLTF', id: 'glb-to-gltf' },
+      { label: 'STEP to IGES', id: 'step-to-iges' },
+      { label: 'OBJ to STL', id: 'obj-to-stl' }
     ]
   }
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { duration: 0.5, ease: 'easeOut' }
-  }
-};
-
-export default function ConversionGrid() {
+export default function ConversionGrid({ externalSearch = '' }) {
   const { darkMode } = useTheme();
+  const [activeTab, setActiveTab] = useState('all');
+  const [internalSearch, setInternalSearch] = useState('');
+
+  // Use external search if provided (from hero), otherwise internal
+  const searchQuery = externalSearch || internalSearch;
+
+  const filteredCategories = useMemo(() => {
+    let result = activeTab === 'all' 
+      ? CATEGORIES.filter(c => c.id !== 'all') 
+      : CATEGORIES.filter(c => c.id === activeTab);
+
+    if (searchQuery) {
+      result = result.map(cat => ({
+        ...cat,
+        links: cat.links?.filter(l => 
+          l.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          l.id.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      })).filter(cat => cat.links && cat.links.length > 0);
+    }
+
+    return result;
+  }, [activeTab, searchQuery]);
 
   return (
     <section id="conversions" className={`py-24 relative overflow-hidden ${darkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
-      <div className="absolute inset-0 pointer-events-none opacity-40">
-        <div className={`absolute top-0 right-1/4 w-96 h-96 rounded-full blur-[100px] ${darkMode ? 'bg-indigo-900/20' : 'bg-indigo-200/40'}`} />
-        <div className={`absolute bottom-0 left-1/4 w-96 h-96 rounded-full blur-[100px] ${darkMode ? 'bg-sky-900/20' : 'bg-sky-200/40'}`} />
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-20">
+        <div className="text-center mb-16">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -137,62 +168,83 @@ export default function ConversionGrid() {
           >
             Universal File Conversion
           </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className={`max-w-2xl mx-auto text-lg ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}
-          >
-            A professional suite of conversion tools. Fast, secure, and entirely online with no software installation required.
-          </motion.p>
+          
+          {/* Tabs / Filters */}
+          <div className="flex flex-wrap justify-center gap-3 mt-10">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveTab(cat.id)}
+                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all duration-300 ${
+                  activeTab === cat.id
+                    ? 'bg-primary-600 text-white shadow-xl shadow-primary-500/20'
+                    : darkMode 
+                      ? 'bg-slate-900 text-slate-400 border border-white/5 hover:bg-slate-800' 
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <cat.icon className="w-5 h-5" />
+                {cat.title}
+              </button>
+            ))}
+          </div>
         </div>
 
         <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"
+          layout
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          {CATEGORIES.map((cat) => (
-            <motion.div
-              key={cat.title}
-              variants={itemVariants}
-              whileHover={{ y: -5 }}
-              className={`group flex flex-col rounded-2xl p-6 transition-all duration-300 ${
-                darkMode 
-                  ? 'bg-slate-900/60 border border-slate-800/50 backdrop-blur-sm shadow-xl shadow-black/20' 
-                  : 'bg-white border border-slate-200 shadow-sm hover:shadow-lg'
-              } ${cat.border}`}
-            >
-              <div className="flex items-center gap-4 mb-6 pb-4 border-b border-slate-200/50 dark:border-slate-800/50">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${cat.bg} ${cat.color}`}>
-                  <cat.icon className="w-6 h-6" />
+          <AnimatePresence mode="popLayout">
+            {filteredCategories.map((cat) => (
+              <motion.div
+                key={cat.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+                className={`group flex flex-col rounded-[2rem] p-8 transition-all duration-300 ${
+                  darkMode 
+                    ? 'bg-slate-900/60 border border-slate-800/50 backdrop-blur-sm shadow-xl shadow-black/20' 
+                    : 'bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-primary-200'
+                }`}
+              >
+                <div className="flex items-center gap-4 mb-8 pb-5 border-b border-slate-200/50 dark:border-slate-800/50">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 ${cat.bg} ${cat.color}`}>
+                    <cat.icon className="w-7 h-7" />
+                  </div>
+                  <h3 className={`font-bold text-lg ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                    {cat.title}
+                  </h3>
                 </div>
-                <h3 className={`font-semibold text-sm tracking-wide ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-                  {cat.title}
-                </h3>
-              </div>
 
-              <ul className="space-y-3 flex-1">
-                {cat.links.map((link) => (
-                  <li key={link.id}>
-                    <Link 
-                      to={`/convert?type=${link.id}`} 
-                      className={`group/link flex items-center justify-between text-[13px] font-medium transition-colors ${
-                        darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
-                      }`}
-                    >
-                      <span>{link.label}</span>
-                      <HiChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all text-indigo-500" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
+                <ul className="space-y-4 flex-1">
+                  {cat.links.map((link) => (
+                    <li key={link.id}>
+                      <Link 
+                        to={`/convert?type=${link.id}`} 
+                        className={`group/link flex items-center justify-between text-[15px] font-semibold transition-colors ${
+                          darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                        }`}
+                      >
+                        <span>{link.label}</span>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all ${darkMode ? 'bg-primary-500/10' : 'bg-primary-50'}`}>
+                           <HiChevronRight className="w-4 h-4 text-primary-500" />
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </motion.div>
+
+        {filteredCategories.length === 0 && (
+          <div className="text-center py-20">
+            <p className="text-xl text-slate-500">No conversion tools found for your search.</p>
+          </div>
+        )}
       </div>
     </section>
   );

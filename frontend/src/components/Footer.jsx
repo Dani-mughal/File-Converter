@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { 
   HiOutlineHeart, 
@@ -21,33 +22,36 @@ export default function Footer() {
     {
       title: 'Converter',
       links: [
-        { label: 'Video Converter', href: '#' },
-        { label: 'Audio Converter', href: '#' },
-        { label: 'Image Converter', href: '#' },
-        { label: 'Document Converter', href: '#' },
-        { label: 'Archive Converter', href: '#' },
+        { label: 'Video Converter', href: '/convert?type=video' },
+        { label: 'Audio Converter', href: '/convert?type=audio' },
+        { label: 'Image Converter', href: '/convert?type=image' },
+        { label: 'Document Converter', href: '/convert?type=document' },
+        { label: 'Archive Converter', href: '/convert?type=archive' },
       ]
     },
     {
       title: 'Useful Tools',
       links: [
-        { label: 'Compress PDF', href: '#' },
-        { label: 'Merge PDF', href: '#' },
-        { label: 'Video to GIF', href: '#' },
-        { label: 'Resize Image', href: '#' },
-        { label: 'Extract Text', href: '#' },
+        { label: 'PDF to Word', href: '/convert?type=pdf-to-docx' },
+        { label: 'Word to PDF', href: '/convert?type=docx-to-pdf' },
+        { label: 'Video to GIF', href: '/convert?type=video-to-gif' },
       ]
     },
     {
       title: 'Company',
       links: [
-        { label: 'About Us', href: '#' },
-        { label: 'Privacy Policy', href: '#' },
-        { label: 'Terms of Service', href: '#' },
-        { label: 'Cookie Policy', href: '#' },
-        { label: 'Contact Support', href: '#' },
+        { label: 'About Us', href: '/about' },
+        { label: 'Privacy Policy', href: '/privacy' },
+        { label: 'Terms of Service', href: '/terms' },
+        { label: 'Contact Support', href: '/contact' },
       ]
     }
+  ];
+
+  const socialLinks = [
+    { icon: FaGithub, href: 'https://github.com/Dani-mughal' },
+    { icon: FaLinkedin, href: 'https://www.linkedin.com/in/muhammad-adnan-arif-7b5a65320/' },
+    { icon: FaFacebook, href: 'https://www.facebook.com/muhammadadnan.arif.923' },
   ];
 
   return (
@@ -77,17 +81,19 @@ export default function Footer() {
               The most powerful online file converter. Transform images, documents, and videos into any format with 100% privacy and security. Our cloud-powered engine ensures fast results without any software installation.
             </p>
             <div className="flex items-center gap-4">
-              {[FaTwitter, FaGithub, FaLinkedin, FaFacebook].map((Icon, i) => (
+              {socialLinks.map((social, i) => (
                 <a 
                   key={i}
-                  href="#" 
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                     darkMode 
                       ? 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-primary-400 border border-white/5' 
                       : 'bg-white text-slate-500 hover:bg-primary-50 hover:text-primary-600 border border-black/5 shadow-sm'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <social.icon className="w-5 h-5" />
                 </a>
               ))}
             </div>
@@ -102,14 +108,14 @@ export default function Footer() {
               <ul className="space-y-4">
                 {column.links.map((link) => (
                   <li key={link.label}>
-                    <a 
-                      href={link.href} 
+                    <Link 
+                      to={link.href} 
                       className={`text-sm transition-colors ${
                         darkMode ? 'text-slate-400 hover:text-primary-400' : 'text-slate-600 hover:text-primary-600'
                       }`}
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

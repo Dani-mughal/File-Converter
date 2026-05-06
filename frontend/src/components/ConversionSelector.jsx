@@ -39,24 +39,33 @@ const SUPPORTED_CONVERSIONS = {
   'png': ['jpg', 'webp', 'pdf', 'svg'],
   'webp': ['jpg', 'png'],
   'bmp': ['png', 'jpg'],
-  'svg': ['png', 'jpg'],
+  'svg': ['png', 'jpg', 'pdf', 'webp'],
+  'heic': ['jpg', 'png', 'pdf'],
+  'avif': ['png', 'jpg'],
+  'psd': ['jpg', 'png', 'webp', 'pdf'],
+  'ai': ['pdf', 'svg', 'png', 'jpg'],
+  'eps': ['pdf', 'svg', 'png'],
   
   // Media
-  'mp4': ['avi', 'mov', 'gif', 'mp3'],
-  'avi': ['mp4', 'mov', 'gif'],
-  'mov': ['mp4', 'avi', 'gif'],
-  'mkv': ['mp4'],
-  'webm': ['mp4'],
-  'mp3': ['wav', 'aac', 'm4a'],
-  'wav': ['mp3', 'flac'],
+  'mp4': ['avi', 'mov', 'mkv', 'webm', 'gif', 'mp3'],
+  'avi': ['mp4', 'mov', 'gif', 'mp3'],
+  'mov': ['mp4', 'avi', 'gif', 'mp3'],
+  'mkv': ['mp4', 'mp3'],
+  'webm': ['mp4', 'gif'],
+  'mp3': ['wav', 'aac', 'm4a', 'ogg', 'flac'],
+  'wav': ['mp3', 'flac', 'aac'],
   'aac': ['mp3'],
   'm4a': ['mp3'],
+  'flac': ['mp3'],
   'gif': ['mp4', 'png', 'jpg'],
 
   // Code/Data
-  'json': ['csv', 'xml'],
+  'json': ['csv', 'xml', 'yaml'],
   'xml': ['json'],
-  'md': ['html', 'pdf']
+  'yaml': ['json', 'toml'],
+  'yml': ['json'],
+  'md': ['html', 'pdf'],
+  'csv': ['xlsx', 'json', 'pdf'],
 };
 
 const FORMAT_METADATA = {
@@ -81,7 +90,15 @@ const FORMAT_METADATA = {
   'mov': { label: 'MOV', icon: HiOutlineVideoCamera, gradient: 'from-gray-500 to-gray-700' },
   'svg': { label: 'SVG', icon: HiOutlinePhoto, gradient: 'from-orange-400 to-orange-600' },
   'webp': { label: 'WEBP', icon: HiOutlinePhoto, gradient: 'from-cyan-400 to-cyan-600' },
+  'heic': { label: 'HEIC', icon: HiOutlinePhoto, gradient: 'from-indigo-400 to-indigo-600' },
+  'avif': { label: 'AVIF', icon: HiOutlinePhoto, gradient: 'from-pink-400 to-pink-600' },
+  'psd': { label: 'PSD', icon: HiOutlinePhoto, gradient: 'from-blue-600 to-blue-800' },
+  'ai': { label: 'AI', icon: HiOutlinePhoto, gradient: 'from-orange-600 to-red-600' },
+  'eps': { label: 'EPS', icon: HiOutlinePhoto, gradient: 'from-slate-600 to-slate-800' },
+  'mkv': { label: 'MKV', icon: HiOutlineVideoCamera, gradient: 'from-violet-500 to-purple-600' },
+  'webm': { label: 'WEBM', icon: HiOutlineVideoCamera, gradient: 'from-emerald-400 to-emerald-600' },
   'xml': { label: 'XML', icon: HiOutlineSparkles, gradient: 'from-amber-400 to-amber-600' },
+  'yaml': { label: 'YAML', icon: HiOutlineSparkles, gradient: 'from-violet-400 to-violet-600' },
 };
 
 export default function ConversionSelector({ selected, onSelect, files = [] }) {

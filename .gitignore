@@ -13,3 +13,6 @@ Thumbs.db
 *.user
 *.suo
 *.sln
+
+# Temp files
+backend/TempUploads/

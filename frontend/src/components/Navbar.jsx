@@ -13,6 +13,8 @@ export default function Navbar() {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/convert', label: 'Convert' },
+    { to: '/about', label: 'About' },
+    { to: '/contact', label: 'Contact' },
   ];
 
   const isActive = (path) => location.pathname === path;

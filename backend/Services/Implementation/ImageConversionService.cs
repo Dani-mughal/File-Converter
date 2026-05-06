@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Threading.Tasks;
 using System;
-
 using ConvertHub.Api.Services.Interfaces;
 
 namespace ConvertHub.Api.Services.Implementation
@@ -32,7 +31,12 @@ namespace ConvertHub.Api.Services.Implementation
         {
             return type switch
             {
-                ConversionType.WebpToPng or ConversionType.HeicToPng or ConversionType.SvgToPng or ConversionType.JfifToPng => "image/png",
+                ConversionType.WebpToPng or ConversionType.HeicToPng or ConversionType.SvgToPng 
+                    or ConversionType.JfifToPng or ConversionType.AiToPng or ConversionType.PsdToPng 
+                    or ConversionType.AvifToPng => "image/png",
+                ConversionType.PngToSvg or ConversionType.AiToSvg or ConversionType.EpsToSvg => "image/svg+xml",
+                ConversionType.PngToIco or ConversionType.SvgToIco => "image/x-icon",
+                ConversionType.AiToPdf or ConversionType.EpsToPdf or ConversionType.SvgToPdf or ConversionType.PsdToPdf => "application/pdf",
                 _ => "image/jpeg"
             };
         }
@@ -48,21 +52,27 @@ namespace ConvertHub.Api.Services.Implementation
         {
             return type switch
             {
-                ConversionType.WebpToPng or ConversionType.HeicToPng or ConversionType.SvgToPng or ConversionType.JfifToPng => ".png",
-                ConversionType.PngToSvg => ".svg",
+                ConversionType.WebpToPng or ConversionType.HeicToPng or ConversionType.SvgToPng 
+                    or ConversionType.JfifToPng or ConversionType.AiToPng or ConversionType.PsdToPng 
+                    or ConversionType.AvifToPng => ".png",
+                ConversionType.PngToSvg or ConversionType.AiToSvg or ConversionType.EpsToSvg => ".svg",
+                ConversionType.PngToIco or ConversionType.SvgToIco => ".ico",
+                ConversionType.AiToPdf or ConversionType.EpsToPdf or ConversionType.SvgToPdf or ConversionType.PsdToPdf => ".pdf",
                 _ => ".jpg"
             };
         }
 
         public async Task ConvertImageAsync(string sourcePath, string destPath, ConversionType conversionType)
         {
+            _logger.LogInformation("[IMAGE SERVICE] {Type}: {Src} → {Dst}", conversionType, sourcePath, destPath);
             await Task.Run(() =>
             {
                 try
                 {
-                    // For PDF to Image, we need a special density setting
                     var readSettings = new MagickReadSettings();
-                    if (conversionType == ConversionType.PdfToJpg || conversionType == ConversionType.DocumentToPdf)
+                    // Better quality for documents and vectors
+                    if (conversionType == ConversionType.PdfToJpg || conversionType == ConversionType.SvgToPng 
+                        || conversionType == ConversionType.AiToPng || conversionType == ConversionType.EpsToPng)
                     {
                         readSettings.Density = new Density(300, 300);
                     }
@@ -75,32 +85,83 @@ namespace ConvertHub.Api.Services.Implementation
                         case ConversionType.JfifToPng:
                         case ConversionType.HeicToPng:
                         case ConversionType.SvgToPng:
+                        case ConversionType.JpgToPng:
+                        case ConversionType.AiToPng:
+                        case ConversionType.PsdToPng:
+                        case ConversionType.AvifToPng:
                             image.Format = MagickFormat.Png;
                             break;
+
                         case ConversionType.WebpToJpg:
                         case ConversionType.HeicToJpg:
                         case ConversionType.PdfToJpg:
+                        case ConversionType.PngToJpg:
+                        case ConversionType.SvgToJpg:
+                        case ConversionType.PsdToJpg:
+                        case ConversionType.JfifToJpg:
                             image.Format = MagickFormat.Jpeg;
                             image.Quality = 90;
                             break;
+
+                        case ConversionType.PngToWebp:
+                        case ConversionType.JpgToWebp:
+                        case ConversionType.SvgToWebp:
+                        case ConversionType.PsdToWebp:
+                            image.Format = MagickFormat.WebP;
+                            break;
+
                         case ConversionType.PngToSvg:
+                        case ConversionType.AiToSvg:
+                        case ConversionType.EpsToSvg:
                             image.Format = MagickFormat.Svg;
                             break;
-                        case ConversionType.ImageConverter:
-                            // Best effort default based on extension
-                            var ext = Path.GetExtension(destPath)?.ToLowerInvariant() ?? ".jpg";
-                            image.Format = ext == ".png" ? MagickFormat.Png : MagickFormat.Jpeg;
+
+                        case ConversionType.PngToIco:
+                        case ConversionType.SvgToIco:
+                            image.Format = MagickFormat.Ico;
                             break;
+
+                        case ConversionType.EpsToPdf:
+                        case ConversionType.AiToPdf:
+                        case ConversionType.PsdToPdf:
+                        case ConversionType.SvgToPdf:
+                        case ConversionType.HeicToPdf:
+                        case ConversionType.TiffToPdf:
+                        case ConversionType.JpgToPdf:
+                        case ConversionType.PngToPdf:
+                            image.Format = MagickFormat.Pdf;
+                            break;
+
+                        case ConversionType.ImageConverter:
+                            var ext = Path.GetExtension(destPath)?.ToLowerInvariant();
+                            image.Format = ext switch {
+                                ".png" => MagickFormat.Png,
+                                ".webp" => MagickFormat.WebP,
+                                ".svg" => MagickFormat.Svg,
+                                ".pdf" => MagickFormat.Pdf,
+                                _ => MagickFormat.Jpeg
+                            };
+                            break;
+
                         default:
-                            throw new NotSupportedException($"Image conversion type {conversionType} is not fully supported yet.");
+                            // Try to guess by extension if not explicitly handled but routed here
+                            var destExt = Path.GetExtension(destPath)?.ToLowerInvariant();
+                            if (destExt == ".png") image.Format = MagickFormat.Png;
+                            else if (destExt == ".webp") image.Format = MagickFormat.WebP;
+                            else if (destExt == ".pdf") image.Format = MagickFormat.Pdf;
+                            else if (destExt == ".svg") image.Format = MagickFormat.Svg;
+                            else image.Format = MagickFormat.Jpeg;
+                            break;
                     }
                     
+                    image.Strip();
                     image.Write(destPath);
+                    _logger.LogInformation("[IMAGE SERVICE DONE] {Type}", conversionType);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, $"Error converting image for {conversionType}");
-                    throw new InvalidOperationException($"Failed to convert image.", ex);
+                    throw new InvalidOperationException($"Failed to convert image: {ex.Message}", ex);
                 }
             });
         }

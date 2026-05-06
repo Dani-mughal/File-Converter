@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 import { useFileHistory } from '../hooks/useFileHistory';
-import { convertFile, getOutputExtension } from '../services/api';
+import { uploadFile, startConversion, getJobStatus, downloadJobResult, getOutputExtension } from '../services/api';
 import FileUpload from '../components/FileUpload';
 import ConversionSelector from '../components/ConversionSelector';
 import ProgressBar from '../components/ProgressBar';
@@ -34,12 +34,12 @@ export default function ConvertPage() {
   const [outputFileName, setOutputFileName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const abortRef = useRef(null);
+  const pollIntervalRef = useRef(null);
 
-  // Cleanup blob URL on unmount
   useEffect(() => {
     return () => {
       if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
   }, [downloadUrl]);
 
@@ -57,90 +57,77 @@ export default function ConvertPage() {
     setProgress(0);
     setErrorMessage('');
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-
     try {
-      // Simulate upload progress (0-50%), then conversion progress (50-100%)
-      let currentProgress = 0;
-      const uploadInterval = setInterval(() => {
-        currentProgress = Math.min(currentProgress + 2, 50);
-        setProgress(currentProgress);
-      }, 100);
+      // Step 1: Upload (taking the first file for now in this demo, multi-file would loop)
+      const file = files[0];
+      const uploadRes = await uploadFile(file, (pct) => setProgress(Math.round(pct * 0.3)));
 
-      const blob = await convertFile(
-        files,
-        conversionType,
-        (uploadPct) => {
-          clearInterval(uploadInterval);
-          setProgress(Math.round(uploadPct * 0.5));
-        },
-        controller.signal
-      );
+      // Step 2: Start Job
+      const targetFormat = conversionType.includes('-to-') ? conversionType.split('-to-')[1] : conversionType;
+      const jobId = await startConversion(uploadRes.filePath, targetFormat, file.name);
+      
+      setProgress(40);
 
-      clearInterval(uploadInterval);
-
-      // Simulate final processing
-      for (let p = 50; p <= 100; p += 5) {
-        await new Promise((r) => setTimeout(r, 80));
-        setProgress(p);
-      }
-
-      const ext = getOutputExtension(conversionType);
-      const firstFileName = files[0].name.replace(/\.[^.]+$/, '');
-      const outName = files.length > 1 
-        ? `converted_files_${Date.now()}${ext}`
-        : `${firstFileName}-converted${ext}`;
-
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
-      setOutputFileName(outName);
-      setStep(STEPS.DONE);
-      setProgress(100);
-
-      addEntry({
-        fileName: files.length > 1 ? `${files.length} Files` : files[0].name,
-        fileSize: files.reduce((acc, f) => acc + f.size, 0),
-        conversionType,
-        status: 'success',
-      });
-
-      toast.success('Conversion successful!');
-    } catch (err) {
-      if (err.name === 'CanceledError' || err.name === 'AbortError') return;
-
-      let msg = 'Conversion failed. Please try again.';
-      if (err.response) {
-        if (err.response.status === 413) msg = 'Files too large for the server.';
-        else if (err.response.status === 415) msg = 'Unsupported file format.';
-        else if (err.response.status === 500) msg = 'Server error. Please try again later.';
+      // Step 3: Poll Status
+      pollIntervalRef.current = setInterval(async () => {
         try {
-          const text = await err.response.data.text();
-          const json = JSON.parse(text);
-          if (json.message) msg = json.message;
-        } catch {}
-      } else if (err.code === 'ERR_NETWORK') {
-        msg = 'Cannot connect to server. Make sure the backend is running.';
-      }
+          const status = await getJobStatus(jobId);
+          if (status.state === 2) { // Completed
+            clearInterval(pollIntervalRef.current);
+            setProgress(90);
+            
+            const blob = await downloadJobResult(jobId);
+            const url = URL.createObjectURL(blob);
+            
+            const ext = getOutputExtension(targetFormat);
+            const outName = `${file.name.replace(/\.[^.]+$/, '')}-converted${ext}`;
+            
+            setDownloadUrl(url);
+            setOutputFileName(outName);
+            setStep(STEPS.DONE);
+            setProgress(100);
+            toast.success('Conversion successful!');
+            
+            addEntry({
+              fileName: file.name,
+              fileSize: file.size,
+              conversionType,
+              status: 'success',
+            });
+          } else if (status.state === 3) { // Failed
+            throw new Error(status.errorMessage || 'Conversion failed.');
+          } else {
+            // Processing
+            setProgress(40 + (status.progress * 0.5));
+          }
+        } catch (err) {
+          clearInterval(pollIntervalRef.current);
+          handleError(err);
+        }
+      }, 1000);
 
-      setErrorMessage(msg);
-      setStep(STEPS.ERROR);
-      toast.error(msg);
-
-      addEntry({
-        fileName: files.length > 1 ? `${files.length} Files` : files[0].name,
-        fileSize: files.reduce((acc, f) => acc + f.size, 0),
-        conversionType,
-        status: 'error',
-      });
+    } catch (err) {
+      handleError(err);
     }
+  };
+
+  const handleError = (err) => {
+    const msg = err.message || 'Conversion failed. Please try again.';
+    setErrorMessage(msg);
+    setStep(STEPS.ERROR);
+    toast.error(msg);
+    addEntry({
+      fileName: files[0]?.name || 'Unknown',
+      fileSize: files[0]?.size || 0,
+      conversionType,
+      status: 'error',
+    });
   };
 
   const handleReset = () => {
     if (downloadUrl) URL.revokeObjectURL(downloadUrl);
     setFiles([]);
     setFileError(null);
-    setConversionType('');
     setStep(STEPS.UPLOAD);
     setProgress(0);
     setDownloadUrl(null);
@@ -152,148 +139,58 @@ export default function ConvertPage() {
 
   return (
     <div className={`min-h-screen pt-24 pb-16 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-      {/* Background Effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-32 right-1/4 w-72 h-72 bg-primary-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-32 left-1/4 w-72 h-72 bg-accent-500/5 rounded-full blur-3xl" />
-      </div>
-
       <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
-        >
-          <h1 className="text-3xl sm:text-4xl font-bold">
-            Convert Your <span className="gradient-text">Files</span>
-          </h1>
-          <p className={`mt-3 text-base ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            Upload, choose format, and download — it's that easy.
-          </p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold">Convert Your <span className="gradient-text">Files</span></h1>
+          <p className={`mt-3 text-base ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fast, secure, and entirely online.</p>
         </motion.div>
 
-        {/* Main Content */}
         <div className="space-y-6">
           <AnimatePresence mode="wait">
             {step === STEPS.UPLOAD && (
-              <motion.div
-                key="upload-step"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                <FileUpload
-                  files={files}
-                  onFilesChange={setFiles}
-                  error={fileError}
-                  onError={setFileError}
-                />
-
-                <ConversionSelector
-                  selected={conversionType}
-                  onSelect={setConversionType}
-                  files={files}
-                />
-
-                <motion.button
-                  id="convert-btn"
+              <motion.div key="upload-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                <FileUpload files={files} onFilesChange={setFiles} error={fileError} onError={setFileError} />
+                <ConversionSelector selected={conversionType} onSelect={setConversionType} files={files} />
+                <button
                   onClick={handleConvert}
                   disabled={!canConvert}
-                  whileHover={canConvert ? { scale: 1.02 } : {}}
-                  whileTap={canConvert ? { scale: 0.98 } : {}}
-                  className={`w-full py-4 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer ${
-                    canConvert
-                      ? 'gradient-bg text-white shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40'
-                      : darkMode
-                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
+                    canConvert ? 'gradient-bg text-white shadow-xl hover:scale-[1.01]' : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                   }`}
                 >
-                  {files.length === 0
-                    ? 'Upload files to begin'
-                    : !conversionType
-                    ? 'Select a conversion type'
-                    : 'Convert Now'}
-                </motion.button>
-                
+                  {files.length === 0 ? 'Upload files to begin' : !conversionType ? 'Select a format' : 'Convert Now'}
+                </button>
                 <SecurityFeatures />
               </motion.div>
             )}
 
             {step === STEPS.CONVERTING && (
-              <motion.div
-                key="converting-step"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
+              <motion.div key="converting-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <ProgressBar progress={progress} status={progress < 100 ? 'converting' : 'done'} />
               </motion.div>
             )}
 
             {step === STEPS.DONE && (
-              <motion.div
-                key="done-step"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <ResultDownload
-                  downloadUrl={downloadUrl}
-                  fileName={outputFileName}
-                  onReset={handleReset}
-                />
+              <motion.div key="done-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <ResultDownload downloadUrl={downloadUrl} fileName={outputFileName} onReset={handleReset} />
               </motion.div>
             )}
 
             {step === STEPS.ERROR && (
-              <motion.div
-                key="error-step"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <div
-                  className={`rounded-2xl p-8 text-center ${
-                    darkMode
-                      ? 'bg-slate-800/50 border border-red-500/20'
-                      : 'bg-white border border-red-200'
-                  }`}
-                >
-                  <div className="mx-auto w-16 h-16 rounded-full bg-red-500/15 flex items-center justify-center mb-5">
-                    <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
+              <motion.div key="error-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className={`rounded-3xl p-10 text-center border ${darkMode ? 'bg-slate-900 border-red-500/20' : 'bg-white border-red-100'}`}>
+                  <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
-                  <h3 className="text-lg font-bold text-red-500 mb-2">Conversion Failed</h3>
-                  <p className={`text-sm mb-6 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {errorMessage}
-                  </p>
-                  <button
-                    onClick={handleReset}
-                    id="try-again-btn"
-                    className="inline-flex items-center gap-2 px-6 py-3 gradient-bg text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 transition-all hover:shadow-primary-500/40 text-sm cursor-pointer"
-                  >
-                    Try Again
-                  </button>
+                  <h3 className="text-xl font-bold mb-2">Conversion Failed</h3>
+                  <p className="text-slate-500 mb-8">{errorMessage}</p>
+                  <button onClick={handleReset} className="px-8 py-3 gradient-bg text-white font-bold rounded-xl shadow-lg">Try Again</button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* History */}
-          {step === STEPS.UPLOAD && (
-            <FileHistoryPanel
-              history={history}
-              onClear={clearHistory}
-              onRemove={removeEntry}
-            />
-          )}
-
-          {/* Page Ad */}
-          <AdBanner slot="ZZZZZZZZZZ" />
+          {step === STEPS.UPLOAD && <FileHistoryPanel history={history} onClear={clearHistory} onRemove={removeEntry} />}
         </div>
       </div>
     </div>
