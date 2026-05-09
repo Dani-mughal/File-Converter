@@ -222,7 +222,7 @@ export default function ConversionGrid({ externalSearch = '' }) {
                   {cat.links.map((link) => (
                     <li key={link.id}>
                       <Link 
-                        to={`/convert?type=${link.id}`} 
+                        to={`/${link.id}`} 
                         className={`group/link flex items-center justify-between text-[15px] font-semibold transition-colors ${
                           darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                         }`}

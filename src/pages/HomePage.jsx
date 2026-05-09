@@ -1,7 +1,9 @@
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 import { useTheme } from '../context/ThemeContext';
+import { seoConfig } from '../config/seoConfig';
 import {
   HiOutlineBolt,
   HiOutlineShieldCheck,
@@ -109,6 +111,12 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>{seoConfig.default.title}</title>
+        <meta name="description" content={seoConfig.default.description} />
+        <link rel="canonical" href={window.location.origin} />
+      </Helmet>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-32 pb-24 sm:pt-48 sm:pb-36">
         <div className="absolute inset-0 pointer-events-none">
