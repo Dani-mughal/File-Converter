@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://converthub.com/sitemap.xml
+Sitemap: https://converterhub.tech/sitemap.xml
