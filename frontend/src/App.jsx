@@ -11,6 +11,7 @@ import ContactPage from './pages/ContactPage';
 
 import NotFoundPage from './pages/NotFoundPage';
 import AdBanner from './components/AdBanner';
+import AnalyticsTracker from './components/AnalyticsTracker';
 
 export default function App() {
   const { darkMode } = useTheme();
@@ -21,6 +22,8 @@ export default function App() {
         darkMode ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'
       }`}
     >
+      {/* Analytics Tracker - Listen for route changes */}
+      <AnalyticsTracker />
       {/* Dynamic Grid Background */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 grid-background" />
@@ -41,6 +44,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/convert" element={<ConvertPage />} />
+            <Route path="/:toolId" element={<ConvertPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/privacy" element={<div className="pt-48 text-center text-4xl">Privacy Policy</div>} />
