@@ -20,21 +20,32 @@ export default function Footer() {
 
   const footerLinks = [
     {
-      title: 'Converter',
+      title: 'PDF Tools',
       links: [
-        { label: 'Video Converter', href: '/convert?type=video' },
-        { label: 'Audio Converter', href: '/convert?type=audio' },
-        { label: 'Image Converter', href: '/convert?type=image' },
-        { label: 'Document Converter', href: '/convert?type=document' },
-        { label: 'Archive Converter', href: '/convert?type=archive' },
+        { label: 'PDF to Word', href: '/pdf-to-docx' },
+        { label: 'Word to PDF', href: '/docx-to-pdf' },
+        { label: 'PDF to JPG', href: '/pdf-to-jpg' },
+        { label: 'JPG to PDF', href: '/jpg-to-pdf' },
+        { label: 'Merge PDF', href: '/merge-pdf' },
       ]
     },
     {
-      title: 'Useful Tools',
+      title: 'Image Tools',
       links: [
-        { label: 'PDF to Word', href: '/convert?type=pdf-to-docx' },
-        { label: 'Word to PDF', href: '/convert?type=docx-to-pdf' },
-        { label: 'Video to GIF', href: '/convert?type=video-to-gif' },
+        { label: 'JPG to PNG', href: '/jpg-to-png' },
+        { label: 'PNG to JPG', href: '/png-to-jpg' },
+        { label: 'SVG to PNG', href: '/svg-to-png' },
+        { label: 'HEIC to JPG', href: '/heic-to-jpg' },
+        { label: 'WebP to JPG', href: '/webp-to-jpg' },
+      ]
+    },
+    {
+      title: 'Other Tools',
+      links: [
+        { label: 'Video to GIF', href: '/video-to-gif' },
+        { label: 'MP4 to MP3', href: '/mp4-to-mp3' },
+        { label: 'EPUB to PDF', href: '/epub-to-pdf' },
+        { label: 'JSON to CSV', href: '/json-to-csv' },
       ]
     },
     {
