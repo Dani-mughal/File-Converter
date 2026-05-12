@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 import { useFileHistory } from '../hooks/useFileHistory';
-import { uploadFile, startConversion, getJobStatus, downloadJobResult, getOutputExtension } from '../services/api';
+import { uploadFiles, startConversion, getJobStatus, downloadJobResult, getOutputExtension } from '../services/api';
 import { getSeoConfig } from '../config/seoConfig';
 import FileUpload from '../components/FileUpload';
 import ConversionSelector from '../components/ConversionSelector';
@@ -76,11 +76,13 @@ export default function ConvertPage() {
     setErrorMessage('');
 
     try {
-      const file = files[0];
-      const uploadRes = await uploadFile(file, (pct) => setProgress(Math.round(pct * 0.3)));
+      const uploadRes = await uploadFiles(files, (pct) => setProgress(Math.round(pct * 0.3)));
+      const filePaths = uploadRes.filePaths || (uploadRes.filePath ? [uploadRes.filePath] : []);
 
       const targetFormat = conversionType.includes('-to-') ? conversionType.split('-to-')[1] : conversionType;
-      const jobId = await startConversion(uploadRes.filePath, targetFormat, file.name);
+      const primaryFileName = files[0].name;
+      
+      const jobId = await startConversion(filePaths, targetFormat, primaryFileName);
       
       setProgress(40);
 
@@ -95,7 +97,7 @@ export default function ConvertPage() {
             const url = URL.createObjectURL(blob);
             
             const ext = getOutputExtension(targetFormat);
-            const outName = `${file.name.replace(/\.[^.]+$/, '')}-converted${ext}`;
+            const outName = `${primaryFileName.replace(/\.[^.]+$/, '')}-converted${ext}`;
             
             setDownloadUrl(url);
             setOutputFileName(outName);
@@ -104,8 +106,8 @@ export default function ConvertPage() {
             toast.success('Conversion successful!');
             
             addEntry({
-              fileName: file.name,
-              fileSize: file.size,
+              fileName: primaryFileName,
+              fileSize: files.reduce((acc, f) => acc + f.size, 0),
               conversionType,
               status: 'success',
             });

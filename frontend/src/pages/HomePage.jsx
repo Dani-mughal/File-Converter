@@ -155,14 +155,10 @@ export default function HomePage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col items-center gap-6"
           >
-            <div className="w-20 h-20 rounded-[2rem] gradient-bg flex items-center justify-center shadow-2xl shadow-primary-500/40 animate-float">
-              <FileStack className="w-10 h-10 text-white" strokeWidth={2.5} />
-            </div>
             <span
               className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase ${
                 darkMode
@@ -174,7 +170,7 @@ export default function HomePage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              Trusted by 1M+ Users Monthly
+              Production-Grade File Conversion
             </span>
           </motion.div>
 
@@ -186,8 +182,8 @@ export default function HomePage() {
               darkMode ? 'text-white' : 'text-slate-900'
             }`}
           >
-            Universal File Converter: <br className="hidden sm:block" />
-            <span className="gradient-text drop-shadow-sm">Convert Any File</span>
+            Universal File <br className="hidden sm:block" />
+            <span className="gradient-text drop-shadow-sm">Converter</span>
           </motion.h1>
 
           <motion.p
@@ -198,7 +194,7 @@ export default function HomePage() {
               darkMode ? 'text-slate-400' : 'text-slate-600'
             }`}
           >
-            Universal file converter for documents, images, video, audio, archives, and more.
+            Professional tools for PDF, Image, and Media conversion. 
             Fast, secure, and entirely online.
           </motion.p>
 

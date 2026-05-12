@@ -5,92 +5,50 @@
 export const seoConfig = {
   // Default metadata for generic pages
   default: {
-    title: 'ConverterHub | Fast & Free Online File Converter (PDF, Video)',
-    description: 'Convert PDF, Word, images, and video online with ConverterHub. Fast, secure, and free tool supporting 1000+ formats. No installation or registration needed!',
-    h1: 'Universal File Converter: Convert Any File Online for Free',
+    title: 'ConverterHub | Professional File Conversion Utility (PDF, Image, Media)',
+    description: 'The definitive online file converter. Convert PDF to Word, Images, Video, and Archives with production-grade fidelity. Fast, secure, and professional-grade.',
+    h1: 'Universal File Converter: Professional Grade File Processing',
     h2: 'Why Choose ConverterHub?',
   },
 
   // Tool-specific configurations
   tools: {
     'pdf-to-docx': {
-      title: 'Convert PDF to Word Online (Free & Accurate) | ConverterHub',
-      description: 'Easily convert PDF to Word (DOCX) online for free. Maintain formatting and layout with our high-precision OCR technology. No installation required.',
+      title: 'Convert PDF to Word Online (High Fidelity) | ConverterHub',
+      description: 'Professional-grade PDF to Word (DOCX) conversion. Maintain perfect formatting and layout using our advanced conversion engine. Secure and private.',
       h1: 'Convert PDF to Word Online',
-      h2: 'How to convert PDF to Word without losing formatting',
+      h2: 'How to convert PDF to Word with 100% layout preservation',
       faq: [
         {
           q: 'Is it free to convert PDF to Word?',
-          a: 'Yes, ConverterHub offers free PDF to Word conversion for all users. No registration is required for basic conversions.'
+          a: 'Yes, ConverterHub offers professional-grade PDF to Word conversion for free.'
         },
         {
           q: 'Will my document layout be preserved?',
-          a: 'Our advanced conversion engine ensures that your Word document looks exactly like the original PDF, including fonts, images, and tables.'
-        },
-        {
-          q: 'Is it safe to upload my files?',
-          a: 'Absolutely. We use 256-bit SSL encryption for all transfers and automatically delete your files from our servers after 30 minutes.'
-        }
-      ],
-      steps: [
-        'Upload your PDF file by dragging and dropping it into the box.',
-        'Wait for the conversion process to complete.',
-        'Download your converted Word (DOCX) file instantly.'
-      ]
-    },
-    'docx-to-pdf': {
-      title: 'Convert Word to PDF Online - Fast & Free | ConverterHub',
-      description: 'Create PDF documents from Microsoft Word (DOCX/DOC) files instantly. High-quality conversion with preserved formatting and links.',
-      h1: 'Convert Word to PDF Online',
-      h2: 'Professional Word to PDF Converter',
-      faq: [
-        {
-          q: 'Can I convert DOCX to PDF on mobile?',
-          a: 'Yes, ConverterHub works perfectly on all mobile devices and tablets through your browser.'
-        },
-        {
-          q: 'Does it support old .doc files?',
-          a: 'Yes, we support both .docx and the older .doc file formats.'
-        }
-      ],
-      steps: [
-        'Select your Word document from your computer or cloud storage.',
-        'Click the "Convert" button to start the process.',
-        'Save the high-quality PDF to your device.'
-      ]
-    },
-    'jpg-to-pdf': {
-      title: 'Convert JPG to PDF Online - Merge Images into PDF | ConverterHub',
-      description: 'Convert JPG, JPEG, and PNG images to PDF documents. Combine multiple images into a single PDF file easily.',
-      h1: 'Convert JPG to PDF Online',
-      h2: 'The easiest way to turn images into PDF',
-      faq: [
-        {
-          q: 'Can I combine multiple JPGs into one PDF?',
-          a: 'Yes! You can upload multiple images and our tool will merge them into a single PDF document.'
-        }
-      ],
-      steps: [
-        'Upload one or more JPG images.',
-        'Rearrange the order of images if needed.',
-        'Download your merged PDF document.'
-      ]
-    },
-    'pdf-to-jpg': {
-      title: 'Convert PDF to JPG Online - High Quality Images | ConverterHub',
-      description: 'Extract pages from your PDF as high-quality JPG images. Fast, free, and secure online PDF to image converter.',
-      h1: 'Convert PDF to JPG Online',
-      h2: 'Extract Images from PDF Pages',
-      faq: [
-        {
-          q: 'What is the quality of the resulting JPG?',
-          a: 'We provide high-resolution JPG images to ensure your text and graphics remain sharp.'
+          a: 'Our high-fidelity engine ensures that fonts, tables, and images remain exactly where they belong.'
         }
       ],
       steps: [
         'Upload your PDF document.',
-        'Our system will convert each page into a separate JPG image.',
-        'Download the images as a ZIP archive.'
+        'Our engine processes it with high-precision OCR and layout analysis.',
+        'Download your editable Word document.'
+      ]
+    },
+    'zip-folder': {
+      title: 'ZIP Folder Online - Recursive Folder Compression | ConverterHub',
+      description: 'Compress entire folders into ZIP archives while preserving directory structure. Support for batch file zipping online.',
+      h1: 'ZIP Folder Online',
+      h2: 'Professional Recursive ZIP Utility',
+      faq: [
+        {
+          q: 'Can I ZIP multiple files at once?',
+          a: 'Yes, you can upload a whole folder or multiple files and we will ZIP them into a single archive.'
+        }
+      ],
+      steps: [
+        'Select the folder or files you want to compress.',
+        'Wait for our server to recursively package your files.',
+        'Download your secure ZIP archive.'
       ]
     }
   }

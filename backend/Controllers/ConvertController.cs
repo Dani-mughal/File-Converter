@@ -51,7 +51,7 @@ namespace ConvertHub.Api.Controllers
                 if (files.Count == 1)
                 {
                     var path = await _storageService.SaveFileAsync(files[0]);
-                    return Ok(new { success = true, filePath = path, fileName = files[0].FileName });
+                    return Ok(new { success = true, filePath = path, filePaths = new List<string> { path }, fileName = files[0].FileName });
                 }
                 else
                 {

@@ -30,12 +30,15 @@ namespace ConvertHub.Api.Services.Implementation
     {
         private readonly IFileStorageService _fileStorageService;
         private readonly ILogger<PdfConversionService> _logger;
+        private readonly IConfiguration _configuration;
 
         public PdfConversionService(
             IFileStorageService fileStorageService,
+            IConfiguration configuration,
             ILogger<PdfConversionService> logger)
         {
             _fileStorageService = fileStorageService;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -82,6 +85,15 @@ namespace ConvertHub.Api.Services.Implementation
                     break;
                 case ConversionType.EpubToPdf:
                     await Task.Run(() => ConvertEpubToPdf(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.MergePdf:
+                    await Task.Run(() => MergePdfs(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.SplitPdf:
+                    await Task.Run(() => SplitPdf(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.CompressPdf:
+                    await Task.Run(() => CompressPdf(sourceFilePath, outputFilePath));
                     break;
                 default:
                     throw new NotSupportedException($"PDF Service does not support conversion '{conversionType}'.");
@@ -446,13 +458,42 @@ namespace ConvertHub.Api.Services.Implementation
 
         private void ConvertOfficeToPdf(string src, string dst)
         {
-            string soffice = OperatingSystem.IsWindows() ? @"C:\Program Files\LibreOffice\program\soffice.exe" : "soffice";
+            string soffice = ResolveLibreOfficePath();
+            _logger.LogInformation("[PDF SERVICE] Using LibreOffice at: {Path}", soffice);
+
+            if (!File.Exists(soffice) && !OperatingSystem.IsLinux())
+            {
+                throw new FileNotFoundException($"LibreOffice not found at '{soffice}'. Please install LibreOffice or configure 'LibreOfficePath' in appsettings.json.");
+            }
+
             var outDir = Path.GetDirectoryName(dst)!;
             var process = new Process { StartInfo = new ProcessStartInfo { FileName = soffice, Arguments = $"--headless --convert-to pdf \"{src}\" --outdir \"{outDir}\"", UseShellExecute = false, CreateNoWindow = true } };
             process.Start();
             process.WaitForExit(60000);
             var outFile = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".pdf");
             if (File.Exists(outFile) && outFile != dst) File.Move(outFile, dst, true);
+        }
+
+        private string ResolveLibreOfficePath()
+        {
+            // 1. Check Config
+            var configPath = _configuration["LibreOfficePath"];
+            if (!string.IsNullOrEmpty(configPath) && File.Exists(configPath)) return configPath;
+
+            // 2. Standard Windows Paths
+            if (OperatingSystem.IsWindows())
+            {
+                var paths = new[]
+                {
+                    @"C:\Program Files\LibreOffice\program\soffice.exe",
+                    @"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"LibreOffice\program\soffice.exe")
+                };
+                foreach (var p in paths) if (File.Exists(p)) return p;
+            }
+
+            // 3. Fallback to PATH
+            return "soffice";
         }
 
         private void ConvertTxtToDocx(string src, string dst)
@@ -471,5 +512,39 @@ namespace ConvertHub.Api.Services.Implementation
         }
 
         private void ConvertEpubToPdf(string src, string dst) { }
+
+        private void MergePdfs(string srcDir, string dst)
+        {
+            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfWriter(dst));
+            var merger = new iText.Kernel.Utils.PdfMerger(pdfDoc);
+            
+            var files = Directory.GetFiles(srcDir).OrderBy(f => f);
+            foreach (var f in files)
+            {
+                using var readerDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(f));
+                merger.Merge(readerDoc, 1, readerDoc.GetNumberOfPages());
+            }
+        }
+
+        private void SplitPdf(string src, string dstDir)
+        {
+            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
+            var name = Path.GetFileNameWithoutExtension(src);
+            for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+            {
+                var outPath = Path.Combine(dstDir, $"{name}_page_{i}.pdf");
+                using var outDoc = new iText.Kernel.Pdf.PdfDocument(new PdfWriter(outPath));
+                pdfDoc.CopyPagesTo(i, i, outDoc);
+            }
+        }
+
+        private void CompressPdf(string src, string dst)
+        {
+            var writerProps = new WriterProperties().SetFullCompressionMode(true).SetCompressionLevel(9);
+            using var reader = new PdfReader(src);
+            using var writer = new PdfWriter(dst, writerProps);
+            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader, writer);
+            pdfDoc.GetWriter().SetCompressionLevel(9);
+        }
     }
 }

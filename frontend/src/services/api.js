@@ -7,7 +7,7 @@ const api = axios.create({
 
 export async function uploadFile(file, onProgress) {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('files', file); // Use 'files' key to match backend plural expectations
   const response = await api.post('/convert/upload', formData, {
     onUploadProgress: (e) => {
       if (e.total) onProgress(Math.round((e.loaded * 100) / e.total));
@@ -16,9 +16,27 @@ export async function uploadFile(file, onProgress) {
   return response.data;
 }
 
-export async function startConversion(filePath, targetFormat, originalFileName) {
+export async function uploadFiles(files, onProgress) {
   const formData = new FormData();
-  formData.append('filePath', filePath);
+  files.forEach(f => formData.append('files', f));
+  const response = await api.post('/convert/upload', formData, {
+    onUploadProgress: (e) => {
+      if (e.total) onProgress(Math.round((e.loaded * 100) / e.total));
+    }
+  });
+  return response.data;
+}
+
+export async function startConversion(filePaths, targetFormat, originalFileName) {
+  const formData = new FormData();
+  // Ensure filePaths is sent as multiple values for the same key if it's an array
+  if (Array.isArray(filePaths)) {
+    filePaths.forEach(path => {
+      if (path) formData.append('filePaths', path);
+    });
+  } else if (filePaths) {
+    formData.append('filePaths', filePaths);
+  }
   formData.append('targetFormat', targetFormat);
   formData.append('originalFileName', originalFileName);
   const response = await api.post('/convert', formData);

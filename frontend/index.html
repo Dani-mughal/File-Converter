@@ -30,6 +30,15 @@
 
 <body>
   <div id="root"></div>
+
+  <!-- Static Netlify Form for SPA compatibility -->
+  <form name="contact" netlify netlify-honeypot="bot-field" hidden>
+    <input type="text" name="name" />
+    <input type="email" name="email" />
+    <input type="text" name="subject" />
+    <textarea name="message"></textarea>
+  </form>
+
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
