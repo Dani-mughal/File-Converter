@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const STORAGE_KEY = 'converthub-history';
+const STORAGE_KEY = 'converterhub-history';
 const MAX_HISTORY = 20;
 
 /**

@@ -5,23 +5,23 @@
 export const seoConfig = {
   // Default metadata for generic pages
   default: {
-    title: 'ConvertHub | Universal File Converter - PDF, Word, Image, Video',
-    description: 'Convert any file online for free. Support for PDF, Word, Excel, JPG, PNG, MP4, and 1000+ other formats. Fast, secure, and easy to use.',
-    h1: 'Universal File Conversion Made Simple',
-    h2: 'Why Choose ConvertHub?',
+    title: 'ConverterHub | Fast & Free Online File Converter (PDF, Video)',
+    description: 'Convert PDF, Word, images, and video online with ConverterHub. Fast, secure, and free tool supporting 1000+ formats. No installation or registration needed!',
+    h1: 'Universal File Converter: Convert Any File Online for Free',
+    h2: 'Why Choose ConverterHub?',
   },
 
   // Tool-specific configurations
   tools: {
     'pdf-to-docx': {
-      title: 'Convert PDF to Word Online (Free & Accurate) | ConvertHub',
+      title: 'Convert PDF to Word Online (Free & Accurate) | ConverterHub',
       description: 'Easily convert PDF to Word (DOCX) online for free. Maintain formatting and layout with our high-precision OCR technology. No installation required.',
       h1: 'Convert PDF to Word Online',
       h2: 'How to convert PDF to Word without losing formatting',
       faq: [
         {
           q: 'Is it free to convert PDF to Word?',
-          a: 'Yes, ConvertHub offers free PDF to Word conversion for all users. No registration is required for basic conversions.'
+          a: 'Yes, ConverterHub offers free PDF to Word conversion for all users. No registration is required for basic conversions.'
         },
         {
           q: 'Will my document layout be preserved?',
@@ -39,14 +39,14 @@ export const seoConfig = {
       ]
     },
     'docx-to-pdf': {
-      title: 'Convert Word to PDF Online - Fast & Free | ConvertHub',
+      title: 'Convert Word to PDF Online - Fast & Free | ConverterHub',
       description: 'Create PDF documents from Microsoft Word (DOCX/DOC) files instantly. High-quality conversion with preserved formatting and links.',
       h1: 'Convert Word to PDF Online',
       h2: 'Professional Word to PDF Converter',
       faq: [
         {
           q: 'Can I convert DOCX to PDF on mobile?',
-          a: 'Yes, ConvertHub works perfectly on all mobile devices and tablets through your browser.'
+          a: 'Yes, ConverterHub works perfectly on all mobile devices and tablets through your browser.'
         },
         {
           q: 'Does it support old .doc files?',
@@ -60,7 +60,7 @@ export const seoConfig = {
       ]
     },
     'jpg-to-pdf': {
-      title: 'Convert JPG to PDF Online - Merge Images into PDF | ConvertHub',
+      title: 'Convert JPG to PDF Online - Merge Images into PDF | ConverterHub',
       description: 'Convert JPG, JPEG, and PNG images to PDF documents. Combine multiple images into a single PDF file easily.',
       h1: 'Convert JPG to PDF Online',
       h2: 'The easiest way to turn images into PDF',
@@ -77,7 +77,7 @@ export const seoConfig = {
       ]
     },
     'pdf-to-jpg': {
-      title: 'Convert PDF to JPG Online - High Quality Images | ConvertHub',
+      title: 'Convert PDF to JPG Online - High Quality Images | ConverterHub',
       description: 'Extract pages from your PDF as high-quality JPG images. Fast, free, and secure online PDF to image converter.',
       h1: 'Convert PDF to JPG Online',
       h2: 'Extract Images from PDF Pages',
@@ -110,7 +110,7 @@ export const getSeoConfig = (toolId) => {
     const src = parts[0].toUpperCase();
     const tgt = parts[1].toUpperCase();
     return {
-      title: `Convert ${src} to ${tgt} Online - Free & Fast | ConvertHub`,
+      title: `Convert ${src} to ${tgt} Online - Free & Fast | ConverterHub`,
       description: `Easily convert ${src} files to ${tgt} format online for free. Fast, secure, and no installation required. Try our universal file converter today.`,
       h1: `Convert ${src} to ${tgt} Online`,
       h2: `High-Quality ${src} to ${tgt} Conversion`,
@@ -134,7 +134,7 @@ export const getSeoConfig = (toolId) => {
     const capitalizedAction = action.charAt(0).toUpperCase() + action.slice(1);
     const capitalizedFormat = format.toUpperCase();
     return {
-      title: `${capitalizedAction} ${capitalizedFormat} Online - Free Tool | ConvertHub`,
+      title: `${capitalizedAction} ${capitalizedFormat} Online - Free Tool | ConverterHub`,
       description: `Free online tool to ${action} ${capitalizedFormat} files. Fast, secure, and easy to use with no software installation.`,
       h1: `${capitalizedAction} ${capitalizedFormat} Online`,
       h2: `Professional ${capitalizedFormat} ${capitalizedAction} Tool`,

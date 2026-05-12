@@ -1,11 +1,42 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF frontend/"
+
+[build.environment]
+  NPM_FLAGS = "--prefer-offline --no-audit"
+  NODE_VERSION = "22"
+
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+ 
+[build.processing.html]
+  pretty_print = false
+  minify = true
+
+[build.processing.images]
+  compress = true
+
+[[plugins]]
+  package = "netlify-plugin-cache"
+  [plugins.inputs]
+    paths = [
+      "node_modules/.vite",
+      "dist"
+    ]
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-[context.production.environment]
-  NODE_VERSION = "22"
+
