@@ -273,18 +273,22 @@ namespace ConvertHub.Api.Services.Implementation
                     if (File.Exists(localPath)) pdf2docxPath = localPath;
                 }
 
-                var process = new System.Diagnostics.Process
+                if (OperatingSystem.IsLinux())
                 {
-                    StartInfo = new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = pdf2docxPath,
-                        Arguments = $"convert \"{src}\" \"{dst}\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
+                    // Use /usr/bin/python3 -m pdf2docx for maximum compatibility on Linux/Docker
+                    process.StartInfo.FileName = "/usr/bin/python3";
+                    process.StartInfo.Arguments = $"-m pdf2docx convert \"{src}\" \"{dst}\"";
+                }
+                else
+                {
+                    process.StartInfo.FileName = pdf2docxPath;
+                    process.StartInfo.Arguments = $"convert \"{src}\" \"{dst}\"";
+                }
+                
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
                 
                 process.Start();
                 if (!process.WaitForExit(120000))
@@ -662,7 +666,7 @@ namespace ConvertHub.Api.Services.Implementation
             {
                 StartInfo = new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = "convert", // ImageMagick
+                    FileName = OperatingSystem.IsLinux() ? "/usr/bin/convert" : "convert",
                     Arguments = $"\"{src}\" \"{dst}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
