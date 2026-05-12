@@ -21,10 +21,16 @@ export default defineConfig({
     cssMinify: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['framer-motion', 'lucide-react', 'react-icons'],
-        },
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('react-icons')) {
+              return 'ui-vendor';
+            }
+          }
+        }
       },
     },
     chunkSizeWarningLimit: 1000,
