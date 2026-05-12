@@ -35,25 +35,33 @@ namespace ConvertHub.Api.Controllers
 
         // POST /api/convert/upload
         [HttpPost("upload")]
-        public async Task<IActionResult> Upload([FromForm] IFormFile file)
+        public async Task<IActionResult> Upload()
         {
-            if (file == null || file.Length == 0)
+            var files = Request.Form.Files;
+            if (files == null || files.Count == 0)
             {
-                _logger.LogWarning("Upload attempt with no file.");
-                return BadRequest(new { success = false, error = "No file uploaded." });
+                _logger.LogWarning("Upload attempt with no files.");
+                return BadRequest(new { success = false, error = "No files uploaded." });
             }
 
-            _logger.LogInformation("[UPLOAD STARTED] {FileName} ({Size} bytes)", file.FileName, file.Length);
+            _logger.LogInformation("[UPLOAD STARTED] {Count} files", files.Count);
 
             try
             {
-                var path = await _storageService.SaveFileAsync(file);
-                _logger.LogInformation("[UPLOAD COMPLETE] Saved to {Path}", path);
-                return Ok(new { success = true, filePath = path, fileName = file.FileName });
+                if (files.Count == 1)
+                {
+                    var path = await _storageService.SaveFileAsync(files[0]);
+                    return Ok(new { success = true, filePath = path, fileName = files[0].FileName });
+                }
+                else
+                {
+                    var paths = await _storageService.SaveFilesAsync(files);
+                    return Ok(new { success = true, filePaths = paths, count = files.Count });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[UPLOAD FAILED] {FileName}", file.FileName);
+                _logger.LogError(ex, "[UPLOAD FAILED]");
                 return StatusCode(500, new { success = false, error = $"Upload failed: {ex.Message}" });
             }
         }
@@ -61,19 +69,41 @@ namespace ConvertHub.Api.Controllers
         // POST /api/convert  — start a conversion job
         [HttpPost]
         public async Task<IActionResult> StartConversion(
-            [FromForm] string filePath,
+            [FromForm] string? filePath,
+            [FromForm] List<string>? filePaths,
             [FromForm] string targetFormat,
             [FromForm] string originalFileName)
         {
             _logger.LogInformation("[CONVERSION STARTED] {OriginalFileName} → {TargetFormat}", originalFileName, targetFormat);
 
-            if (string.IsNullOrWhiteSpace(filePath))
-                return BadRequest(new { success = false, error = "filePath is required." });
+            if (string.IsNullOrWhiteSpace(filePath) && (filePaths == null || filePaths.Count == 0))
+                return BadRequest(new { success = false, error = "filePath or filePaths is required." });
 
-            if (!System.IO.File.Exists(filePath))
+            // If we have multiple files, we'll create a temp folder for them
+            string effectivePath = filePath ?? "";
+            if (filePaths != null && filePaths.Count > 1)
             {
-                _logger.LogError("[CONVERSION FAILED] Source file does not exist: {FilePath}", filePath);
-                return BadRequest(new { success = false, error = "Uploaded file not found on server. Please re-upload." });
+                var batchDir = Path.Combine(_storageService.GetTempDirectory(), Guid.NewGuid().ToString());
+                Directory.CreateDirectory(batchDir);
+                foreach (var fp in filePaths)
+                {
+                    if (System.IO.File.Exists(fp))
+                    {
+                        var dest = Path.Combine(batchDir, Path.GetFileName(fp));
+                        System.IO.File.Copy(fp, dest);
+                    }
+                }
+                effectivePath = batchDir;
+            }
+            else if (filePaths != null && filePaths.Count == 1)
+            {
+                effectivePath = filePaths[0];
+            }
+
+            if (!System.IO.File.Exists(effectivePath) && !Directory.Exists(effectivePath))
+            {
+                _logger.LogError("[CONVERSION FAILED] Source path does not exist: {Path}", effectivePath);
+                return BadRequest(new { success = false, error = "Uploaded files not found on server." });
             }
 
             if (string.IsNullOrWhiteSpace(targetFormat))
@@ -108,7 +138,7 @@ namespace ConvertHub.Api.Controllers
                     var service = factory.GetService(conversionType);
                     _logger.LogInformation("[COMMAND EXECUTING] JobId={JobId} Service={Service}", jobId, service.GetType().Name);
 
-                    var outputPath = await service.ConvertAsync(filePath, conversionType);
+                    var outputPath = await service.ConvertAsync(effectivePath, conversionType);
 
                     if (!System.IO.File.Exists(outputPath))
                         throw new FileNotFoundException($"Converter ran but output file was not created at {outputPath}");
@@ -358,6 +388,10 @@ namespace ConvertHub.Api.Controllers
         {
             src = src.ToLowerInvariant().Trim();
             target = target.ToLowerInvariant().Trim();
+
+            // Special cases for Archive
+            if (target == "zip" || target == "archive") return ConversionType.Zip;
+            if (src == "zip" && (target == "unzip" || target == "extract")) return ConversionType.Unzip;
 
             // Direct lookup
             if (_conversionMap.TryGetValue((src, target), out var ct))
