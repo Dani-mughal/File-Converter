@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const GA_MEASUREMENT_ID = 'G-4WJTHJHMXE';
+const GA_MEASUREMENT_ID = 'G-Y50BTSB341';
 
 /**
  * AnalyticsTracker component

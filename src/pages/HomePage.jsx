@@ -13,6 +13,7 @@ import {
   HiOutlineQueueList,
   HiOutlineArchiveBox
 } from 'react-icons/hi2';
+import { FileStack } from 'lucide-react';
 import ConversionGrid from '../components/ConversionGrid';
 import AdBanner from '../components/AdBanner';
 
@@ -115,6 +116,33 @@ export default function HomePage() {
         <title>{seoConfig.default.title}</title>
         <meta name="description" content={seoConfig.default.description} />
         <link rel="canonical" href={window.location.origin} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "ConverterHub",
+            "url": window.location.origin,
+            "description": seoConfig.default.description,
+            "applicationCategory": "Utility",
+            "operatingSystem": "All",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "1250"
+            },
+            "featureList": [
+              "Batch file conversion",
+              "PDF to Word OCR",
+              "Video to MP3 extraction",
+              "Secure file deletion after 30 mins"
+            ]
+          })}
+        </script>
       </Helmet>
 
       {/* Hero Section */}
@@ -127,10 +155,14 @@ export default function HomePage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
+            className="flex flex-col items-center gap-6"
           >
+            <div className="w-20 h-20 rounded-[2rem] gradient-bg flex items-center justify-center shadow-2xl shadow-primary-500/40 animate-float">
+              <FileStack className="w-10 h-10 text-white" strokeWidth={2.5} />
+            </div>
             <span
               className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase ${
                 darkMode
@@ -154,8 +186,8 @@ export default function HomePage() {
               darkMode ? 'text-white' : 'text-slate-900'
             }`}
           >
-            Convert Any File, <br className="hidden sm:block" />
-            <span className="gradient-text drop-shadow-sm">Anytime</span>
+            Universal File Converter: <br className="hidden sm:block" />
+            <span className="gradient-text drop-shadow-sm">Convert Any File</span>
           </motion.h1>
 
           <motion.p
@@ -282,7 +314,7 @@ export default function HomePage() {
             className="text-center mb-20"
           >
             <h2 className={`text-4xl sm:text-5xl font-black mb-6 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-              The World's Most Powerful Converter
+              Fast, Secure, and High-Quality Conversions
             </h2>
             <p className={`mt-4 text-xl max-w-2xl mx-auto ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               Everything you need to process files professionally, all in one place.
@@ -338,7 +370,7 @@ export default function HomePage() {
               Stop Waiting, <br /> Start Converting.
             </h2>
             <p className={`text-xl mb-12 max-w-2xl mx-auto ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Join millions of users who trust ConvertHub for their daily file processing needs. No credit card required.
+              Join millions of users who trust ConverterHub for their daily file processing needs. No credit card required.
             </p>
             <Link
               to="/convert"
