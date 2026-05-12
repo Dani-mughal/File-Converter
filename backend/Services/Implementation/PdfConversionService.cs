@@ -125,6 +125,10 @@ namespace ConvertHub.Api.Services.Implementation
                 case ConversionType.PngToPdf:
                 case ConversionType.HeicToPdf:
                 case ConversionType.TiffToPdf:
+                case ConversionType.SvgToPdf:
+                case ConversionType.AiToPdf:
+                case ConversionType.PsdToPdf:
+                case ConversionType.EpsToPdf:
                     await Task.Run(() => ConvertImageToPdf(sourceFilePath, outputFilePath));
                     break;
 
