@@ -478,6 +478,7 @@ namespace ConvertHub.Api.Services.Implementation
         {
             try
             {
+                // First try standard PATH discovery
                 var checkProcess = new System.Diagnostics.Process
                 {
                     StartInfo = new System.Diagnostics.ProcessStartInfo
@@ -498,14 +499,20 @@ namespace ConvertHub.Api.Services.Implementation
             }
             catch { }
 
-            var sofficePaths = new[]
+            // Hardcoded common paths as fallbacks
+            string[] commonPaths = OperatingSystem.IsLinux()
+                ? new[] { "/usr/bin/soffice", "/usr/bin/libreoffice", "/usr/lib/libreoffice/program/soffice", "/usr/lib/libreoffice/program/soffice.bin" }
+                : new[] { 
+                    @"C:\Program Files\LibreOffice\program\soffice.exe", 
+                    @"C:\Program Files (x86)\LibreOffice\program\soffice.exe" 
+                };
+
+            foreach (var path in commonPaths)
             {
-                "/usr/bin/soffice",
-                "/usr/lib/libreoffice/program/soffice",
-                @"C:\Program Files\LibreOffice\program\soffice.exe",
-                @"C:\Program Files (x86)\LibreOffice\program\soffice.exe"
-            };
-            return sofficePaths.FirstOrDefault(File.Exists);
+                if (File.Exists(path)) return path;
+            }
+
+            return null;
         }
 
         private void ConvertOfficeToPdf(string src, string dst)
