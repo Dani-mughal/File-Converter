@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using PuppeteerSharp;
 
 // Aliases to avoid ambiguity
 using Wp = DocumentFormat.OpenXml.Wordprocessing;
