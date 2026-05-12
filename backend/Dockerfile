@@ -12,7 +12,11 @@ RUN dotnet publish -c Release -o out
 
 # Use the official .NET 9.0 runtime as the final image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
-RUN apt-get update && apt-get install -y ffmpeg ghostscript libgdiplus && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ffmpeg ghostscript libgdiplus libreoffice poppler-utils imagemagick python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install pdf2docx
+
 WORKDIR /app
 COPY --from=build-env /app/out .
 

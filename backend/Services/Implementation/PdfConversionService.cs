@@ -258,6 +258,51 @@ namespace ConvertHub.Api.Services.Implementation
 
         private void ConvertPdfToWord(string src, string dst)
         {
+            try
+            {
+                string pdf2docxPath = "pdf2docx";
+                if (OperatingSystem.IsLinux() && File.Exists("/opt/venv/bin/pdf2docx"))
+                {
+                    pdf2docxPath = "/opt/venv/bin/pdf2docx";
+                }
+                else if (OperatingSystem.IsWindows())
+                {
+                    // Fallback for Windows if it's not in PATH but installed via pip
+                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    var localPath = Path.Combine(appData, @"Python\Python310\Scripts\pdf2docx.exe");
+                    if (File.Exists(localPath)) pdf2docxPath = localPath;
+                }
+
+                var process = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = pdf2docxPath,
+                        Arguments = $"convert \"{src}\" \"{dst}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                
+                process.Start();
+                if (!process.WaitForExit(120000))
+                {
+                    process.Kill();
+                    _logger.LogError("[PDF SERVICE] pdf2docx conversion timed out.");
+                }
+
+                if (File.Exists(dst)) return;
+                
+                _logger.LogError("[PDF SERVICE] pdf2docx failed: {Error}", process.StandardError.ReadToEnd());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("[PDF SERVICE] pdf2docx process failed to start: {Msg}", ex.Message);
+            }
+
+            _logger.LogWarning("[PDF SERVICE] Falling back to basic iText extraction for PDF to Word.");
             using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
             using var wordDoc = WordprocessingDocument.Create(dst, WordprocessingDocumentType.Document);
             var mainPart = wordDoc.AddMainDocumentPart();
@@ -279,30 +324,68 @@ namespace ConvertHub.Api.Services.Implementation
 
         private void ConvertPdfToTxt(string src, string dst)
         {
-            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
-            var sb = new System.Text.StringBuilder();
-            for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
-                sb.AppendLine(PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), new LocationTextExtractionStrategy()));
-            File.WriteAllText(dst, sb.ToString());
+            // pdftotext from poppler-utils
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "pdftotext",
+                    Arguments = $"\"{src}\" \"{dst}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            if (!process.WaitForExit(60000) || !File.Exists(dst))
+            {
+                // Fallback to iText
+                using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
+                var sb = new System.Text.StringBuilder();
+                for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+                    sb.AppendLine(PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), new LocationTextExtractionStrategy()));
+                File.WriteAllText(dst, sb.ToString());
+            }
         }
 
         private void ConvertPdfToHtml(string src, string dst)
         {
-            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Converted</title></head><body>");
-            for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+            // pdftohtml from poppler-utils
+            var process = new System.Diagnostics.Process
             {
-                var text = PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), new LocationTextExtractionStrategy());
-                foreach (var line in text.Split('\n'))
-                    sb.AppendLine($"<p>{System.Net.WebUtility.HtmlEncode(line)}</p>");
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "pdftohtml",
+                    Arguments = $"-s -noframes \"{src}\" \"{dst}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            if (!process.WaitForExit(60000) || !File.Exists(dst))
+            {
+                // Fallback to iText
+                using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Converted</title></head><body>");
+                for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+                {
+                    var text = PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(i), new LocationTextExtractionStrategy());
+                    foreach (var line in text.Split('\n'))
+                        sb.AppendLine($"<p>{System.Net.WebUtility.HtmlEncode(line)}</p>");
+                }
+                sb.AppendLine("</body></html>");
+                File.WriteAllText(dst, sb.ToString());
             }
-            sb.AppendLine("</body></html>");
-            File.WriteAllText(dst, sb.ToString());
         }
 
         private void ConvertPdfToExcel(string src, string dst)
         {
+            // For high fidelity PDF to Excel, pdftables or similar would be used,
+            // but we fallback to our basic iText/OpenXml for now since pdf2docx covers docx.
             using var spreadsheet = SpreadsheetDocument.Create(dst, SpreadsheetDocumentType.Workbook);
             var workbookPart = spreadsheet.AddWorkbookPart();
             workbookPart.Workbook = new DocumentFormat.OpenXml.Spreadsheet.Workbook();
@@ -338,15 +421,7 @@ namespace ConvertHub.Api.Services.Implementation
 
         private void ConvertWordToPdf(string src, string dst)
         {
-            using var wordDoc = WordprocessingDocument.Open(src, false);
-            var body = wordDoc.MainDocumentPart?.Document.Body;
-            using var writer = new PdfWriter(dst);
-            using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
-            using var document = new iTextLayout.Document(pdf);
-            if (body != null)
-                foreach (var el in body.Elements())
-                    if (el is Wp.Paragraph p)
-                        document.Add(new iTextElt.Paragraph(string.IsNullOrWhiteSpace(p.InnerText) ? "\n" : p.InnerText));
+            ConvertOfficeToPdf(src, dst);
         }
 
         private void ConvertDocToTxt(string src, string dst)
@@ -372,11 +447,7 @@ namespace ConvertHub.Api.Services.Implementation
 
         private void ConvertTxtToPdf(string src, string dst)
         {
-            var text = File.ReadAllText(src);
-            using var writer = new PdfWriter(dst);
-            using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
-            using var document = new iTextLayout.Document(pdf);
-            document.Add(new iTextElt.Paragraph(text));
+            ConvertOfficeToPdf(src, dst);
         }
 
         private void ConvertTxtToDocx(string src, string dst)
@@ -403,9 +474,30 @@ namespace ConvertHub.Api.Services.Implementation
             File.WriteAllText(dst, $"<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body>{string.Join("\n", lines)}</body></html>");
         }
 
-        private void ConvertOfficeToPdf(string src, string dst)
+        private string? GetSofficePath()
         {
-            // Try LibreOffice first, then fallback
+            try
+            {
+                var checkProcess = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = OperatingSystem.IsLinux() ? "which" : "where",
+                        Arguments = "soffice",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                checkProcess.Start();
+                string output = checkProcess.StandardOutput.ReadToEnd().Trim();
+                checkProcess.WaitForExit();
+
+                if (checkProcess.ExitCode == 0 && !string.IsNullOrEmpty(output))
+                    return output.Split(Environment.NewLine)[0];
+            }
+            catch { }
+
             var sofficePaths = new[]
             {
                 "/usr/bin/soffice",
@@ -413,31 +505,71 @@ namespace ConvertHub.Api.Services.Implementation
                 @"C:\Program Files\LibreOffice\program\soffice.exe",
                 @"C:\Program Files (x86)\LibreOffice\program\soffice.exe"
             };
-            var soffice = sofficePaths.FirstOrDefault(File.Exists);
+            return sofficePaths.FirstOrDefault(File.Exists);
+        }
+
+        private void ConvertOfficeToPdf(string src, string dst)
+        {
+            string? soffice = GetSofficePath();
+
             if (soffice != null)
             {
                 var outDir = Path.GetDirectoryName(dst)!;
+                var profileDir = $"/tmp/libreoffice-profile-{Guid.NewGuid()}";
+                _logger.LogInformation("[PDF SERVICE] Converting using: {Soffice} to {OutDir} with profile {Profile}", soffice, outDir, profileDir);
+
                 var process = new System.Diagnostics.Process
                 {
                     StartInfo = new System.Diagnostics.ProcessStartInfo
                     {
                         FileName = soffice,
-                        Arguments = $"--headless --convert-to pdf \"{src}\" --outdir \"{outDir}\"",
+                        Arguments = $"-env:UserInstallation=file://{profileDir} --headless --convert-to pdf \"{src}\" --outdir \"{outDir}\"",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
                         CreateNoWindow = true
                     }
                 };
-                process.Start();
-                process.WaitForExit(60000);
-                // LibreOffice outputs to same dir with original name + .pdf
-                var libreOutFile = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".pdf");
-                if (File.Exists(libreOutFile) && libreOutFile != dst)
-                    File.Move(libreOutFile, dst, true);
+                try
+                {
+                    process.Start();
+                    if (!process.WaitForExit(120000))
+                    {
+                        process.Kill();
+                        _logger.LogError("[PDF SERVICE] LibreOffice conversion timed out.");
+                    }
+
+                    var libreOutFile = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".pdf");
+                    if (File.Exists(libreOutFile))
+                    {
+                        if (libreOutFile != dst)
+                            File.Move(libreOutFile, dst, true);
+                    }
+                    else
+                    {
+                        _logger.LogError("[PDF SERVICE] LibreOffice output file not found. Error: {Error}", process.StandardError.ReadToEnd());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("[PDF SERVICE] Failed to start LibreOffice: {Msg}", ex.Message);
+                }
+                finally
+                {
+                    if (Directory.Exists(profileDir))
+                    {
+                        try { Directory.Delete(profileDir, true); } catch { }
+                    }
+                }
+                
                 if (File.Exists(dst)) return;
             }
-            // Fallback: write a placeholder PDF noting the limitation
+            else
+            {
+                _logger.LogWarning("[PDF SERVICE] LibreOffice (soffice) not found.");
+            }
+
+            _logger.LogWarning("[PDF SERVICE] Falling back to placeholder PDF for Office conversion.");
             using var writer = new PdfWriter(dst);
             using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
             using var doc = new iTextLayout.Document(pdf);
@@ -446,32 +578,37 @@ namespace ConvertHub.Api.Services.Implementation
 
         private void ConvertOfficeToCsv(string src, string dst)
         {
-            // Basic: use LibreOffice if available
-            var sofficePaths = new[]
-            {
-                "/usr/bin/soffice",
-                @"C:\Program Files\LibreOffice\program\soffice.exe"
-            };
-            var soffice = sofficePaths.FirstOrDefault(File.Exists);
+            string? soffice = GetSofficePath();
             if (soffice != null)
             {
                 var outDir = Path.GetDirectoryName(dst)!;
+                var profileDir = $"/tmp/libreoffice-profile-{Guid.NewGuid()}";
+                
                 var process = new System.Diagnostics.Process
                 {
                     StartInfo = new System.Diagnostics.ProcessStartInfo
                     {
                         FileName = soffice,
-                        Arguments = $"--headless --convert-to csv \"{src}\" --outdir \"{outDir}\"",
+                        Arguments = $"-env:UserInstallation=file://{profileDir} --headless --convert-to csv \"{src}\" --outdir \"{outDir}\"",
                         RedirectStandardOutput = true,
+                        RedirectStandardError = true,
                         UseShellExecute = false,
                         CreateNoWindow = true
                     }
                 };
-                process.Start();
-                process.WaitForExit(60000);
-                var libreOut = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".csv");
-                if (File.Exists(libreOut) && libreOut != dst)
-                    File.Move(libreOut, dst, true);
+                try
+                {
+                    process.Start();
+                    process.WaitForExit(60000);
+                    var libreOut = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".csv");
+                    if (File.Exists(libreOut) && libreOut != dst)
+                        File.Move(libreOut, dst, true);
+                }
+                finally
+                {
+                    if (Directory.Exists(profileDir))
+                        try { Directory.Delete(profileDir, true); } catch { }
+                }
                 if (File.Exists(dst)) return;
             }
             File.WriteAllText(dst, "Column1,Column2\nLibreOffice required for full conversion");
@@ -514,41 +651,48 @@ namespace ConvertHub.Api.Services.Implementation
 
         private void ConvertImageToPdf(string src, string dst)
         {
-            using var writer = new PdfWriter(dst);
-            using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
-            using var doc = new iTextLayout.Document(pdf);
-            var imgData = iText.IO.Image.ImageDataFactory.Create(src);
-            var img = new iTextElt.Image(imgData);
-            img.SetAutoScale(true);
-            doc.Add(img);
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "convert", // ImageMagick
+                    Arguments = $"\"{src}\" \"{dst}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            process.WaitForExit(60000);
+            if (!File.Exists(dst))
+            {
+                _logger.LogWarning("[PDF SERVICE] ImageMagick 'convert' failed, falling back to iText. Error: {Error}", process.StandardError.ReadToEnd());
+                using var writer = new PdfWriter(dst);
+                using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
+                using var doc = new iTextLayout.Document(pdf);
+                var imgData = iText.IO.Image.ImageDataFactory.Create(src);
+                var img = new iTextElt.Image(imgData);
+                img.SetAutoScale(true);
+                doc.Add(img);
+            }
         }
 
         private void ConvertHtmlToPdf(string src, string dst)
         {
-            var html = File.ReadAllText(src);
-            using var writer = new PdfWriter(dst);
-            using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
-            using var doc = new iTextLayout.Document(pdf);
-            // Strip tags for basic conversion
-            var text = System.Text.RegularExpressions.Regex.Replace(html, "<[^>]*>", "");
-            doc.Add(new iTextElt.Paragraph(text));
+            ConvertOfficeToPdf(src, dst);
         }
 
         private void ConvertHtmlToDocx(string src, string dst)
         {
-            var html = File.ReadAllText(src);
-            var text = System.Text.RegularExpressions.Regex.Replace(html, "<[^>]*>", "");
-            using var wordDoc = WordprocessingDocument.Create(dst, WordprocessingDocumentType.Document);
-            var mainPart = wordDoc.AddMainDocumentPart();
-            mainPart.Document = new Wp.Document();
-            var body = mainPart.Document.AppendChild(new Wp.Body());
-            foreach (var line in text.Split('\n'))
-            {
-                var para = new Wp.Paragraph();
-                var run = new Wp.Run();
-                run.AppendChild(new Wp.Text(line));
-                para.AppendChild(run);
-                body.AppendChild(para);
+            ConvertOfficeToPdf(src, dst);
+            // After creating PDF, convert PDF to DOCX
+            if (File.Exists(dst)) {
+                // Actually it generated PDF not Docx, so we need to rename temp to src and run pdf2docx
+                var tempPdf = dst + ".pdf";
+                if (File.Exists(dst)) File.Move(dst, tempPdf);
+                ConvertPdfToWord(tempPdf, dst);
+                File.Delete(tempPdf);
             }
         }
 
