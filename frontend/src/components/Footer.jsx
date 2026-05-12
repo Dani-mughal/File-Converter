@@ -6,6 +6,7 @@ import {
   HiOutlineLockClosed, 
   HiOutlineCloudArrowUp 
 } from 'react-icons/hi2';
+import { FileStack } from 'lucide-react';
 import { 
   FaTwitter, 
   FaGithub, 
@@ -79,13 +80,11 @@ export default function Footer() {
           {/* Brand & Mission */}
           <div className="col-span-2">
             <div className="flex items-center gap-2.5 mb-6">
-              <div className="w-9 h-9 rounded-xl gradient-bg flex items-center justify-center shadow-lg shadow-primary-500/20">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
+              <div className="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center shadow-lg shadow-primary-500/20">
+                <FileStack className="w-6 h-6 text-white" strokeWidth={2.5} />
               </div>
               <span className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                ConvertHub
+                ConverterHub
               </span>
             </div>
             <p className={`text-sm leading-relaxed mb-6 max-w-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -164,7 +163,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-6">
           <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-            &copy; {currentYear} ConvertHub. All rights reserved.
+            &copy; {currentYear} ConverterHub. All rights reserved.
           </p>
           <div className="flex items-center gap-2 text-xs font-medium">
             <span className={darkMode ? 'text-slate-500' : 'text-slate-400'}>Distributed by</span>

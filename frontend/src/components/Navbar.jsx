@@ -1,9 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { HiOutlineSun, HiOutlineMoon } from 'react-icons/hi2';
-import { HiOutlineMenuAlt3, HiOutlineX } from 'react-icons/hi';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FileStack, Sun, Moon, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const { darkMode, toggleTheme } = useTheme();
@@ -31,13 +30,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group" id="nav-logo">
-            <div className="w-9 h-9 rounded-xl gradient-bg flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-shadow">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
+            <div className="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-all duration-300 group-hover:rotate-3">
+              <FileStack className="w-6 h-6 text-white" strokeWidth={2.5} />
             </div>
             <span className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-              Convert<span className="gradient-text">Hub</span>
+              Converter<span className="gradient-text">Hub</span>
             </span>
           </Link>
 
@@ -82,7 +79,7 @@ export default function Navbar() {
               }`}
               aria-label="Toggle theme"
             >
-              {darkMode ? <HiOutlineSun className="w-5 h-5" /> : <HiOutlineMoon className="w-5 h-5" />}
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
             {/* Mobile Menu Toggle */}
@@ -94,7 +91,7 @@ export default function Navbar() {
               }`}
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <HiOutlineX className="w-5 h-5" /> : <HiOutlineMenuAlt3 className="w-5 h-5" />}
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>

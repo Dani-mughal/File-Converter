@@ -13,6 +13,9 @@ import ProgressBar from '../components/ProgressBar';
 import ResultDownload from '../components/ResultDownload';
 import FileHistoryPanel from '../components/FileHistoryPanel';
 import SecurityFeatures from '../components/SecurityFeatures';
+import { getRelatedTools } from '../config/toolsConfig';
+import { Link } from 'react-router-dom';
+import { HiOutlineArrowRight } from 'react-icons/hi2';
 import AdBanner from '../components/AdBanner';
 import { HiOutlineQuestionMarkCircle, HiOutlineListBullet } from 'react-icons/hi2';
 
@@ -182,8 +185,9 @@ export default function ConvertPage() {
         </script>
       </Helmet>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto">
+      {/* Hero / Tool Title */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight">{seo.h1.split(' ')[0]} <span className="gradient-text">{seo.h1.split(' ').slice(1).join(' ')}</span></h1>
             <p className={`mt-4 text-lg ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fast, secure, and entirely online. No installation required.</p>
@@ -286,6 +290,40 @@ export default function ConvertPage() {
             All file transfers are protected by 256-bit SSL encryption. We do not store your files permanently; 
             everything is automatically deleted 30 minutes after conversion to ensure your privacy.
           </p>
+        </div>
+
+        {/* Related Tools Section */}
+        <div className="mt-24 border-t border-slate-200 dark:border-slate-800 pt-16">
+          <h2 className={`text-3xl font-black mb-10 text-center ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            Explore More Conversion Tools
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {getRelatedTools(currentToolId).map((tool) => (
+              <Link
+                key={tool.id}
+                to={`/${tool.id}`}
+                className={`group p-8 rounded-[2rem] border transition-all duration-300 flex items-center justify-between ${
+                  darkMode 
+                    ? 'bg-slate-900/40 border-white/5 hover:border-primary-500/30 hover:bg-slate-900/60' 
+                    : 'bg-white border-slate-100 hover:border-primary-200 hover:shadow-xl'
+                }`}
+              >
+                <div>
+                  <h3 className={`font-bold mb-1 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                    {tool.label}
+                  </h3>
+                  <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Free online conversion
+                  </p>
+                </div>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  darkMode ? 'bg-white/5 text-slate-400 group-hover:text-primary-400' : 'bg-slate-50 text-slate-400 group-hover:text-primary-600'
+                }`}>
+                  <HiOutlineArrowRight className="w-5 h-5" />
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>

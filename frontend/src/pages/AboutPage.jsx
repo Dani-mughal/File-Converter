@@ -53,7 +53,7 @@ export default function AboutPage() {
               Simplifying <span className="gradient-text">File Freedom</span> for Everyone.
             </h1>
             <p className={`text-xl leading-relaxed mb-10 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              ConvertHub was founded on a simple premise: file formats should never stand in the way of productivity. 
+              ConverterHub was founded on a simple premise: file formats should never stand in the way of productivity. 
               We've built the world's most versatile cloud conversion engine to help millions of users bridge the gap 
               between different digital worlds.
             </p>
