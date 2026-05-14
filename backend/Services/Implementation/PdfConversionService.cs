@@ -10,6 +10,10 @@ using SixLabors.ImageSharp.Formats.Jpeg;
 using System.IO.Compression;
 using iText.Layout;
 using iText.Layout.Element;
+using PuppeteerSharp;
+using iText.Layout.Properties;
+using iText.Kernel.Font;
+using iText.IO.Font.Constants;
 
 // Aliases to avoid ambiguity
 using Wp = DocumentFormat.OpenXml.Wordprocessing;
