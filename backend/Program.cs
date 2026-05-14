@@ -32,6 +32,7 @@ builder.Services.AddScoped<PdfConversionService>();
 builder.Services.AddScoped<ImageConversionService>();
 builder.Services.AddScoped<MediaConversionService>();
 builder.Services.AddScoped<TextDataConversionService>();
+builder.Services.AddScoped<ArchiveConversionService>();
 builder.Services.AddScoped<IConversionFactory, ConversionFactory>();
 builder.Services.AddScoped<IConversionService, PdfConversionService>();
 

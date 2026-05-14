@@ -53,6 +53,8 @@ namespace ConvertHub.Api.Services.Implementation
             ConversionType.XmlToJson or ConversionType.CsvToJson or ConversionType.SqlToJson
                 or ConversionType.YamlToJson => ".json",
             ConversionType.JsonToXml or ConversionType.JsonToXmlCode => ".xml",
+            ConversionType.XlsToCsv or ConversionType.XlsxToCsv => ".csv",
+            ConversionType.XlsToJson or ConversionType.XlsxToJson => ".json",
             ConversionType.MarkdownToHtml => ".html",
             ConversionType.HtmlToMarkdown => ".md",
             ConversionType.CssMin => ".css",
@@ -188,6 +190,54 @@ namespace ConvertHub.Api.Services.Implementation
                                     }
                                     File.WriteAllText(destPath, sqlSb.ToString());
                                 }
+                            }
+                            break;
+
+                        case ConversionType.XlsToCsv:
+                        case ConversionType.XlsxToCsv:
+                            {
+                                using var workbook = new XLWorkbook(sourcePath);
+                                var worksheet = workbook.Worksheets.First();
+                                using var writer = new StreamWriter(destPath);
+                                using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+                                var lastRow = worksheet.LastRowUsed().RowNumber();
+                                var lastCol = worksheet.LastColumnUsed().ColumnNumber();
+
+                                for (int r = 1; r <= lastRow; r++)
+                                {
+                                    for (int c = 1; c <= lastCol; c++)
+                                    {
+                                        csv.WriteField(worksheet.Cell(r, c).Value.ToString());
+                                    }
+                                    csv.NextRecord();
+                                }
+                            }
+                            break;
+
+                        case ConversionType.XlsToJson:
+                        case ConversionType.XlsxToJson:
+                            {
+                                using var workbook = new XLWorkbook(sourcePath);
+                                var worksheet = workbook.Worksheets.First();
+                                var list = new List<Dictionary<string, string>>();
+                                var headers = new List<string>();
+
+                                var lastRow = worksheet.LastRowUsed().RowNumber();
+                                var lastCol = worksheet.LastColumnUsed().ColumnNumber();
+
+                                for (int c = 1; c <= lastCol; c++) headers.Add(worksheet.Cell(1, c).Value.ToString());
+
+                                for (int r = 2; r <= lastRow; r++)
+                                {
+                                    var dict = new Dictionary<string, string>();
+                                    for (int c = 1; c <= lastCol; c++)
+                                    {
+                                        dict[headers[c - 1]] = worksheet.Cell(r, c).Value.ToString();
+                                    }
+                                    list.Add(dict);
+                                }
+                                File.WriteAllText(destPath, JsonConvert.SerializeObject(list, Newtonsoft.Json.Formatting.Indented));
                             }
                             break;
 

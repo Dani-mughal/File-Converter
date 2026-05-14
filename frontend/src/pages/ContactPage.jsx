@@ -25,12 +25,32 @@ export default function ContactPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const form = e.target;
+      const response = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(new FormData(form)).toString(),
+      });
 
-    setIsLoading(false);
-    setIsSubmitted(true);
-    toast.success('Message sent successfully!');
+      if (response.ok) {
+        setIsSubmitted(true);
+        toast.success('Message sent successfully!');
+        setFormData({
+          name: '',
+          email: '',
+          subject: 'General Inquiry',
+          message: ''
+        });
+      } else {
+        throw new Error('Form submission failed');
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error('Failed to send message. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -97,8 +117,13 @@ export default function ContactPage() {
                   name="contact"
                   method="POST"
                   data-netlify="true"
+                  netlify-honeypot="bot-field"
                 >
                   <input type="hidden" name="form-name" value="contact" />
+                  <p className="hidden">
+                    <label>Don’t fill this out if you’re human: <input name="bot-field" /></label>
+                  </p>
+                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-bold mb-3">Your Name</label>

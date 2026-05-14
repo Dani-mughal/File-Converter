@@ -4,6 +4,7 @@ namespace ConvertHub.Api.Services.Interfaces
     {
         string GetTempDirectory();
         Task<string> SaveFileAsync(IFormFile file);
+        Task<string[]> SaveFilesAsync(IEnumerable<IFormFile> files);
         void DeleteFile(string filePath);
     }
 }

@@ -121,14 +121,15 @@ namespace ConvertHub.Api.Services.Implementation
                             image.Format = MagickFormat.Ico;
                             break;
 
-                        case ConversionType.EpsToPdf:
                         case ConversionType.AiToPdf:
+                        case ConversionType.EpsToPdf:
                         case ConversionType.PsdToPdf:
                         case ConversionType.SvgToPdf:
+                        case ConversionType.PngToPdf:
+                        case ConversionType.JpgToPdf:
                         case ConversionType.HeicToPdf:
                         case ConversionType.TiffToPdf:
-                        case ConversionType.JpgToPdf:
-                        case ConversionType.PngToPdf:
+                        case ConversionType.ImageToPdf:
                             image.Format = MagickFormat.Pdf;
                             break;
 
