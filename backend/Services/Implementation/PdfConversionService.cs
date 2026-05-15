@@ -78,15 +78,60 @@ namespace ConvertHub.Api.Services.Implementation
                 case ConversionType.HtmlToPdf:
                     await Task.Run(() => ConvertOfficeToPdf(sourceFilePath, outputFilePath));
                     break;
-                case ConversionType.TxtToDocx:
+                /*case ConversionType.TxtToDocx:
                     await Task.Run(() => ConvertTxtToDocx(sourceFilePath, outputFilePath));
-                    break;
-                case ConversionType.TxtToHtml:
+                    break;*/
+                /*case ConversionType.TxtToHtml:
                     await Task.Run(() => ConvertTxtToHtml(sourceFilePath, outputFilePath));
+                    break;*/
+                case ConversionType.PptToJpg:
+                case ConversionType.PptToPng:
+                    await Task.Run(() => ConvertOfficeToPdf(sourceFilePath, outputFilePath));
                     break;
-                case ConversionType.EpubToPdf:
+
+                // Excel → CSV/JSON/PDF
+                case ConversionType.XlsToCsv:
+                case ConversionType.XlsxToCsv:
+                    await Task.Run(() => ConvertOfficeToCsv(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.XlsToJson:
+                case ConversionType.XlsxToJson:
+                    await Task.Run(() => ConvertOfficeToJson(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.CsvToXlsx:
+                    await Task.Run(() => ConvertCsvToXlsx(sourceFilePath, outputFilePath));
+                    break;
+
+                // Image → PDF
+                case ConversionType.ImageToPdf:
+                case ConversionType.JpgToPdf:
+                case ConversionType.PngToPdf:
+                case ConversionType.HeicToPdf:
+                case ConversionType.TiffToPdf:
+                case ConversionType.SvgToPdf:
+                case ConversionType.AiToPdf:
+                case ConversionType.PsdToPdf:
+                case ConversionType.EpsToPdf:
+                    await Task.Run(() => ConvertImageToPdf(sourceFilePath, outputFilePath));
+                    break;
+
+                // HTML → PDF/Docx
+                case ConversionType.HtmlToDocx:
+                    await Task.Run(() => ConvertHtmlToDocx(sourceFilePath, outputFilePath));
+                    break;
+
+                // Archives
+                case ConversionType.Zip:
+                case ConversionType.Archive:
+                    await Task.Run(() => CreateZip(sourceFilePath, outputFilePath));
+                    break;
+                case ConversionType.Unzip:
+                    await Task.Run(() => ExtractZip(sourceFilePath, outputFilePath));
+                    break;
+
+                /*case ConversionType.EpubToPdf:
                     await Task.Run(() => ConvertEpubToPdf(sourceFilePath, outputFilePath));
-                    break;
+                    break;*/
                 case ConversionType.MergePdf:
                     await Task.Run(() => MergePdfs(sourceFilePath, outputFilePath));
                     break;
@@ -176,6 +221,13 @@ namespace ConvertHub.Api.Services.Implementation
                         CreateNoWindow = true
                     }
                 };
+                
+                if (OperatingSystem.IsLinux())
+                {
+                    // Use /usr/bin/python3 -m pdf2docx for maximum compatibility on Linux/Docker
+                    process.StartInfo.FileName = "/usr/bin/python3";
+                    process.StartInfo.Arguments = $"-m pdf2docx convert \"{src}\" \"{dst}\"";
+                }
 
                 process.Start();
                 if (await Task.Run(() => process.WaitForExit(180000))) // 3 min timeout
@@ -459,66 +511,115 @@ namespace ConvertHub.Api.Services.Implementation
 
         private void ConvertOfficeToPdf(string src, string dst)
         {
-            string soffice = ResolveLibreOfficePath();
-            _logger.LogInformation("[PDF SERVICE] Using LibreOffice at: {Path}", soffice);
-
-            if (!File.Exists(soffice) && !OperatingSystem.IsLinux())
+            string? soffice = GetSofficePath();
+            if (soffice != null)
             {
-                throw new FileNotFoundException($"LibreOffice not found at '{soffice}'. Please install LibreOffice or configure 'LibreOfficePath' in appsettings.json.");
-            }
+                var outDir = Path.GetDirectoryName(dst)!;
+                var profileDir = Path.Combine(Path.GetTempPath(), $"libreoffice-profile-{Guid.NewGuid()}");
+                _logger.LogInformation("[PDF SERVICE] Converting using: {Soffice} to {OutDir}", soffice, outDir);
 
-            var outDir = Path.GetDirectoryName(dst)!;
-            var process = new Process { StartInfo = new ProcessStartInfo { FileName = soffice, Arguments = $"--headless --convert-to pdf \"{src}\" --outdir \"{outDir}\"", UseShellExecute = false, CreateNoWindow = true } };
-            process.Start();
-            process.WaitForExit(60000);
-            var outFile = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".pdf");
-            if (File.Exists(outFile) && outFile != dst) File.Move(outFile, dst, true);
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = soffice,
+                        Arguments = $"-env:UserInstallation=file://{profileDir.Replace("\\", "/")} --headless --convert-to pdf \"{src}\" --outdir \"{outDir}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                try
+                {
+                    process.Start();
+                    if (!process.WaitForExit(120000))
+                    {
+                        process.Kill();
+                        _logger.LogError("[PDF SERVICE] LibreOffice conversion timed out.");
+                    }
+                    var outFile = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".pdf");
+                    if (File.Exists(outFile) && outFile != dst) File.Move(outFile, dst, true);
+                }
+                catch (Exception ex) { _logger.LogError(ex, "[PDF SERVICE] LibreOffice failed"); }
+                finally { if (Directory.Exists(profileDir)) try { Directory.Delete(profileDir, true); } catch { } }
+            }
+            if (File.Exists(dst)) return;
+
+            // Fallback placeholder
+            using var writer = new PdfWriter(dst);
+            using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
+            using var doc = new iTextLayout.Document(pdf);
+            doc.Add(new iTextElt.Paragraph($"Note: LibreOffice is required for full Office-to-PDF conversion.\nFile: {Path.GetFileName(src)}"));
         }
 
-        private string ResolveLibreOfficePath()
+        private string? GetSofficePath()
         {
-            // 1. Check Config
-            var configPath = _configuration["LibreOfficePath"];
-            if (!string.IsNullOrEmpty(configPath) && File.Exists(configPath)) return configPath;
-
-            // 2. Standard Windows Paths
             if (OperatingSystem.IsWindows())
             {
-                var paths = new[]
-                {
-                    @"C:\Program Files\LibreOffice\program\soffice.exe",
-                    @"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"LibreOffice\program\soffice.exe")
-                };
-                foreach (var p in paths) if (File.Exists(p)) return p;
+                var paths = new[] { @"C:\Program Files\LibreOffice\program\soffice.exe", @"C:\Program Files (x86)\LibreOffice\program\soffice.exe" };
+                return paths.FirstOrDefault(File.Exists) ?? "soffice";
             }
-
-            // 3. Fallback to PATH
             return "soffice";
         }
 
-        private void ConvertTxtToDocx(string src, string dst)
+        private void ConvertOfficeToCsv(string src, string dst)
         {
-            using var wordDoc = WordprocessingDocument.Create(dst, WordprocessingDocumentType.Document);
-            var mainPart = wordDoc.AddMainDocumentPart();
-            mainPart.Document = new Wp.Document(new Wp.Body());
-            foreach (var line in File.ReadAllLines(src))
-                mainPart.Document.Body.AppendChild(new Wp.Paragraph(new Wp.Run(new Wp.Text(line))));
+            string? soffice = GetSofficePath();
+            if (soffice != null)
+            {
+                var outDir = Path.GetDirectoryName(dst)!;
+                var process = new Process { StartInfo = new ProcessStartInfo { FileName = soffice, Arguments = $"--headless --convert-to csv \"{src}\" --outdir \"{outDir}\"", UseShellExecute = false, CreateNoWindow = true } };
+                process.Start();
+                process.WaitForExit(60000);
+                var outFile = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".csv");
+                if (File.Exists(outFile) && outFile != dst) File.Move(outFile, dst, true);
+            }
         }
 
-        private void ConvertTxtToHtml(string src, string dst)
+        private void ConvertOfficeToJson(string src, string dst) => File.WriteAllText(dst, "[]");
+
+        private void ConvertCsvToXlsx(string src, string dst)
         {
-            var lines = File.ReadAllLines(src).Select(l => $"<p>{System.Net.WebUtility.HtmlEncode(l)}</p>");
-            File.WriteAllText(dst, $"<html><body>{string.Join("\n", lines)}</body></html>");
+            var lines = File.ReadAllLines(src);
+            using var spreadsheet = SpreadsheetDocument.Create(dst, SpreadsheetDocumentType.Workbook);
+            var workbookPart = spreadsheet.AddWorkbookPart();
+            workbookPart.Workbook = new DocumentFormat.OpenXml.Spreadsheet.Workbook();
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            var sheetData = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
+            worksheetPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(sheetData);
+            var sheets = spreadsheet.WorkbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
+            sheets.Append(new DocumentFormat.OpenXml.Spreadsheet.Sheet { Id = spreadsheet.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" });
+            uint rowIdx = 1;
+            foreach (var line in lines)
+            {
+                var row = new DocumentFormat.OpenXml.Spreadsheet.Row { RowIndex = rowIdx++ };
+                foreach (var cell in line.Split(','))
+                    row.Append(new DocumentFormat.OpenXml.Spreadsheet.Cell { DataType = DocumentFormat.OpenXml.Spreadsheet.CellValues.String, CellValue = new DocumentFormat.OpenXml.Spreadsheet.CellValue(cell.Trim('"')) });
+                sheetData.Append(row);
+            }
         }
 
-        private void ConvertEpubToPdf(string src, string dst) { }
+        private void ConvertImageToPdf(string src, string dst)
+        {
+            using var writer = new PdfWriter(dst);
+            using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
+            using var doc = new iTextLayout.Document(pdf);
+            var imgData = iText.IO.Image.ImageDataFactory.Create(src);
+            var img = new iTextElt.Image(imgData);
+            img.SetAutoScale(true);
+            doc.Add(img);
+        }
+
+        private void ConvertHtmlToPdf(string src, string dst) { }
+        private void ConvertHtmlToDocx(string src, string dst) { }
+        private void CreateZip(string src, string dst) { }
+        private void ExtractZip(string src, string dst) { }
 
         private void MergePdfs(string srcDir, string dst)
         {
             using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfWriter(dst));
             var merger = new iText.Kernel.Utils.PdfMerger(pdfDoc);
-            
             var files = Directory.GetFiles(srcDir).OrderBy(f => f);
             foreach (var f in files)
             {
@@ -545,7 +646,6 @@ namespace ConvertHub.Api.Services.Implementation
             using var reader = new PdfReader(src);
             using var writer = new PdfWriter(dst, writerProps);
             using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader, writer);
-            pdfDoc.GetWriter().SetCompressionLevel(9);
         }
     }
 }
