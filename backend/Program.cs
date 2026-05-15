@@ -2,6 +2,7 @@ using ConvertHub.Api.Middleware;
 using ConvertHub.Api.Services.Implementation;
 using ConvertHub.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
+using SkiaSharp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +69,31 @@ Directory.CreateDirectory(tempDir);
 Directory.CreateDirectory(outputDir);
 
 app.Logger.LogInformation("ConvertHub API starting. TempDir={TempDir}", tempDir);
+
+// ── Startup Diagnostics ───────────────────────────────────────────────────
+// LibreOffice check
+var sofficePaths = OperatingSystem.IsWindows()
+    ? new[] { @"C:\Program Files\LibreOffice\program\soffice.exe", @"C:\Program Files (x86)\LibreOffice\program\soffice.exe" }
+    : new[] { "/usr/bin/soffice", "/usr/lib/libreoffice/program/soffice", "/usr/local/bin/soffice" };
+
+var sofficeFound = sofficePaths.FirstOrDefault(File.Exists);
+if (sofficeFound != null)
+    app.Logger.LogInformation("[STARTUP] ✔ LibreOffice found at: {Path}", sofficeFound);
+else
+    app.Logger.LogWarning("[STARTUP] ✘ LibreOffice NOT found — Office-to-PDF conversions will fail in production. " +
+                          "Fix: apt-get install -y libreoffice-core libreoffice-writer fonts-dejavu");
+
+// SkiaSharp check — attempt to create a minimal surface to confirm native libs loaded
+try
+{
+    using var surface = SkiaSharp.SKSurface.Create(new SkiaSharp.SKImageInfo(1, 1));
+    app.Logger.LogInformation("[STARTUP] ✔ SkiaSharp native libs loaded successfully.");
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning("[STARTUP] ✘ SkiaSharp failed to initialize: {Err}. " +
+                          "Fix: apt-get install -y libfontconfig1 libfreetype6 libx11-6", ex.Message);
+}
 
 // CORRECT middleware order: CORS → Routing → Exception Handler → Endpoints
 app.UseCors("AllowAll");

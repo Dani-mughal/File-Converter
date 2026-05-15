@@ -647,54 +647,118 @@ namespace ConvertHub.Api.Services.Implementation
         private void ConvertOfficeToPdf(string src, string dst)
         {
             string? soffice = GetSofficePath();
-            if (soffice != null)
+            if (soffice == null)
             {
-                var outDir = Path.GetDirectoryName(dst)!;
-                var profileDir = Path.Combine(Path.GetTempPath(), $"libreoffice-profile-{Guid.NewGuid()}");
-                _logger.LogInformation("[PDF SERVICE] Converting using: {Soffice} to {OutDir}", soffice, outDir);
-
-                var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = soffice,
-                        Arguments = $"-env:UserInstallation=file://{profileDir.Replace("\\", "/")} --headless --convert-to pdf \"{src}\" --outdir \"{outDir}\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-                try
-                {
-                    process.Start();
-                    if (!process.WaitForExit(120000))
-                    {
-                        process.Kill();
-                        _logger.LogError("[PDF SERVICE] LibreOffice conversion timed out.");
-                    }
-                    var outFile = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".pdf");
-                    if (File.Exists(outFile) && outFile != dst) File.Move(outFile, dst, true);
-                }
-                catch (Exception ex) { _logger.LogError(ex, "[PDF SERVICE] LibreOffice failed"); }
-                finally { if (Directory.Exists(profileDir)) try { Directory.Delete(profileDir, true); } catch { } }
+                _logger.LogError("[PDF SERVICE] LibreOffice not found. Cannot convert {File} to PDF.", Path.GetFileName(src));
+                throw new InvalidOperationException(
+                    $"LibreOffice (soffice) was not found on this system. " +
+                    $"Install it with: apt-get install -y libreoffice-core libreoffice-writer fonts-dejavu");
             }
-            if (File.Exists(dst)) return;
 
-            // Fallback placeholder
-            using var writer = new PdfWriter(dst);
-            using var pdf = new iText.Kernel.Pdf.PdfDocument(writer);
-            using var doc = new iTextLayout.Document(pdf);
-            doc.Add(new iTextElt.Paragraph($"Note: LibreOffice is required for full Office-to-PDF conversion.\nFile: {Path.GetFileName(src)}"));
+            var outDir = Path.GetDirectoryName(dst)!;
+            var profileDir = Path.Combine(Path.GetTempPath(), $"libreoffice-profile-{Guid.NewGuid()}");
+            Directory.CreateDirectory(profileDir);
+
+            _logger.LogInformation("[PDF SERVICE] soffice={Soffice} outDir={OutDir} profile={Profile}", soffice, outDir, profileDir);
+
+            // On Linux the profile path must start with file:/// (three slashes)
+            var profileUri = OperatingSystem.IsWindows()
+                ? $"file:///{profileDir.Replace("\\", "/")}"
+                : $"file://{profileDir}";
+
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = soffice,
+                    Arguments = $"-env:UserInstallation={profileUri} --headless --norestore --convert-to pdf \"{src}\" --outdir \"{outDir}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            try
+            {
+                process.Start();
+                var stdout = process.StandardOutput.ReadToEnd();
+                var stderr = process.StandardError.ReadToEnd();
+
+                if (!process.WaitForExit(150000))
+                {
+                    process.Kill();
+                    throw new TimeoutException("LibreOffice conversion timed out after 150 seconds.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(stderr))
+                    _logger.LogWarning("[PDF SERVICE] soffice stderr: {Stderr}", stderr);
+                if (!string.IsNullOrWhiteSpace(stdout))
+                    _logger.LogInformation("[PDF SERVICE] soffice stdout: {Stdout}", stdout);
+
+                // LibreOffice writes <filename>.pdf in outDir — rename to our target path
+                var generatedFile = Path.Combine(outDir, Path.GetFileNameWithoutExtension(src) + ".pdf");
+                if (File.Exists(generatedFile) && generatedFile != dst)
+                    File.Move(generatedFile, dst, overwrite: true);
+
+                if (!File.Exists(dst) || new FileInfo(dst).Length == 0)
+                    throw new InvalidOperationException($"LibreOffice ran but did not produce a valid PDF for: {Path.GetFileName(src)}");
+
+                _logger.LogInformation("[PDF SERVICE] Office → PDF success: {Dst} ({Bytes} bytes)", dst, new FileInfo(dst).Length);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[PDF SERVICE] LibreOffice conversion failed for {File}", Path.GetFileName(src));
+                throw;
+            }
+            finally
+            {
+                if (Directory.Exists(profileDir))
+                    try { Directory.Delete(profileDir, true); } catch { }
+            }
         }
 
         private string? GetSofficePath()
         {
+            // ── Windows ──────────────────────────────────────────────────────────
             if (OperatingSystem.IsWindows())
             {
-                var paths = new[] { @"C:\Program Files\LibreOffice\program\soffice.exe", @"C:\Program Files (x86)\LibreOffice\program\soffice.exe" };
-                return paths.FirstOrDefault(File.Exists) ?? "soffice";
+                var winPaths = new[]
+                {
+                    @"C:\Program Files\LibreOffice\program\soffice.exe",
+                    @"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+                };
+                var found = winPaths.FirstOrDefault(File.Exists);
+                if (found != null)
+                {
+                    _logger.LogInformation("[STARTUP] LibreOffice found at: {Path}", found);
+                    return found;
+                }
+                _logger.LogWarning("[STARTUP] LibreOffice NOT found on Windows. Office-to-PDF will fail.");
+                return null;
             }
+
+            // ── Linux / Docker ────────────────────────────────────────────────────
+            var linuxPaths = new[]
+            {
+                "/usr/bin/soffice",
+                "/usr/lib/libreoffice/program/soffice",
+                "/usr/local/bin/soffice",
+                "/opt/libreoffice/program/soffice",
+                "/snap/bin/libreoffice",
+            };
+
+            foreach (var path in linuxPaths)
+            {
+                if (File.Exists(path))
+                {
+                    _logger.LogInformation("[STARTUP] LibreOffice found at: {Path}", path);
+                    return path;
+                }
+            }
+
+            // Last resort: rely on PATH (e.g. symlink created by package manager)
+            _logger.LogWarning("[STARTUP] LibreOffice not found at known paths — falling back to PATH lookup 'soffice'");
             return "soffice";
         }
 

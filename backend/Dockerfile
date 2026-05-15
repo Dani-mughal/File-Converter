@@ -1,27 +1,49 @@
-# Use the official .NET 9.0 SDK as the build image
+# ─────────────────────────────────────────
+# Stage 1: Build
+# ─────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
 WORKDIR /app
 
-# Copy the project file and restore dependencies
 COPY ConvertHub.Api.csproj ./
 RUN dotnet restore
 
-# Copy the remaining source code and build the application
 COPY . ./
 RUN dotnet publish -c Release -o out
 
-# Use the official .NET 9.0 runtime as the final image
+# ─────────────────────────────────────────
+# Stage 2: Runtime
+# ─────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    ghostscript \
+
+# ── System packages ───────────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # LibreOffice — minimal set for DOCX/XLSX/PPTX → PDF
+    libreoffice-core \
+    libreoffice-writer \
+    libreoffice-calc \
+    libreoffice-impress \
+    fonts-dejavu \
+    fonts-liberation \
+    # SkiaSharp native deps (SVG rendering)
+    libfontconfig1 \
+    libfreetype6 \
+    libpng16-16 \
+    libx11-6 \
+    libxext6 \
+    # GDI+ support
     libgdiplus \
-    libreoffice \
+    # Ghostscript / poppler (PDF tools)
+    ghostscript \
     poppler-utils \
+    # FFmpeg (media conversion)
+    ffmpeg \
+    # ImageMagick (fallback image ops)
     imagemagick \
+    # Python + pdf2docx (Word fallback)
     python3 \
     python3-pip \
     python3-venv \
+    # Misc shared libs
     libnss3 \
     libatk-bridge2.0-0 \
     libcups2 \
@@ -32,19 +54,27 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     libpangocairo-1.0-0 \
     libxshmfence1 \
-    libfontconfig1 \
-    libfreetype6 \
     && rm -rf /var/lib/apt/lists/*
+
+# ── Verify soffice is accessible ──────────────────────────────────────────────
+RUN which soffice || (echo "soffice not found after install" && exit 1)
+RUN soffice --version || (echo "soffice failed to run" && exit 1)
+
+# ── Python venv + pdf2docx (fallback Word engine) ─────────────────────────────
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install pdf2docx
+RUN pip install --no-cache-dir pdf2docx
 
+# ── App ───────────────────────────────────────────────────────────────────────
 WORKDIR /app
 COPY --from=build-env /app/out .
 
-# Expose the port Render expects (Render sets the PORT env var)
+# Create temp upload directory
+RUN mkdir -p /app/TempUploads && chmod 777 /app/TempUploads
+
 ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+
 EXPOSE 8080
 
-# Start the application and bind to the dynamic port provided by Render
 ENTRYPOINT ["sh", "-c", "dotnet ConvertHub.Api.dll --urls http://0.0.0.0:${PORT:-8080}"]
