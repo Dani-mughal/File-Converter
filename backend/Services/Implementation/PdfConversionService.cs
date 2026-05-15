@@ -274,57 +274,115 @@ namespace ConvertHub.Api.Services.Implementation
                 mainPart.Document = new Wp.Document();
                 var body = mainPart.Document.AppendChild(new Wp.Body());
 
+                // Setup Default Styles
+                SetupDocxStyles(mainPart);
+
                 for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
                 {
                     var page = pdfDoc.GetPage(i);
-                    var strategy = new LayoutAwareExtractionStrategy();
+                    var pageSize = page.GetPageSize();
+                    var strategy = new AdvancedLayoutStrategy();
                     PdfCanvasProcessor processor = new PdfCanvasProcessor(strategy);
                     processor.ProcessPageContent(page);
 
                     var elements = strategy.GetElements();
-                    var rows = GroupElementsByRows(elements);
-                    foreach (var row in rows)
-                    {
-                        if (IsTable(row)) body.Append(CreateTable(row));
-                        else body.Append(CreateParagraph(row));
-                    }
+                    var images = strategy.GetImages();
 
-                    foreach (var img in strategy.GetImages())
+                    // 1. Word Spacing Reconstruction
+                    ReconstructWords(elements);
+
+                    // 2. Column Detection & Layout Analysis
+                    var columns = DetectColumns(elements, pageSize.GetWidth());
+
+                    // 3. Process Content by Reading Order (Column then Y)
+                    foreach (var column in columns.OrderBy(c => c.X))
                     {
-                        InsertImage(mainPart, body, img);
+                        var colElements = column.Elements;
+                        var colImages = images.Where(img => img.Rect.GetX() >= column.X && img.Rect.GetX() < column.X + column.Width).ToList();
+
+                        // Combine and sort by Y (Top to Bottom)
+                        var sortedContent = colElements.Cast<IPageElement>()
+                            .Concat(colImages.Cast<IPageElement>())
+                            .OrderByDescending(e => e.Rect.GetY())
+                            .ToList();
+
+                        // 4. Section & Paragraph Grouping
+                        LayoutParagraph? currentPara = null;
+                        
+                        foreach (var item in sortedContent)
+                        {
+                            if (item is LayoutElement el)
+                            {
+                                if (currentPara == null || IsNewParagraph(currentPara, el))
+                                {
+                                    if (currentPara != null) body.Append(CreateParagraph(currentPara));
+                                    currentPara = new LayoutParagraph();
+                                }
+                                currentPara.Elements.Add(el);
+                            }
+                            else if (item is ImageElement img)
+                            {
+                                if (currentPara != null)
+                                {
+                                    body.Append(CreateParagraph(currentPara));
+                                    currentPara = null;
+                                }
+                                InsertImageIntoDocx(mainPart, body, img);
+                            }
+                        }
+                        if (currentPara != null) body.Append(CreateParagraph(currentPara));
                     }
 
                     if (i < pdfDoc.GetNumberOfPages())
                         body.Append(new Wp.Paragraph(new Wp.Run(new Wp.Break { Type = Wp.BreakValues.Page })));
                 }
 
+                // Set Page Size for the whole document based on last page
                 var lastPageSize = pdfDoc.GetPage(pdfDoc.GetNumberOfPages()).GetPageSize();
                 body.Append(new Wp.SectionProperties(new Wp.PageSize
                 {
-                    Width = new UInt32Value((uint)(lastPageSize.GetWidth() * 20)),
-                    Height = new UInt32Value((uint)(lastPageSize.GetHeight() * 20))
+                    Width = (UInt32Value)(uint)(lastPageSize.GetWidth() * 20),
+                    Height = (UInt32Value)(uint)(lastPageSize.GetHeight() * 20)
                 }));
 
                 wordDoc.Save();
             });
         }
 
-        private class LayoutElement
+        private interface IPageElement { Rectangle Rect { get; } }
+
+        private class LayoutElement : IPageElement
         {
             public string Text { get; set; } = string.Empty;
             public Rectangle Rect { get; set; } = new Rectangle(0, 0, 0, 0);
             public float FontSize { get; set; } = 10f;
+            public string FontName { get; set; } = "Calibri";
             public bool IsBold { get; set; }
+            public bool IsItalic { get; set; }
+            public string ColorHex { get; set; } = "000000";
         }
 
-        private class ImageElement
+        private class ImageElement : IPageElement
         {
             public byte[] Bytes { get; set; } = Array.Empty<byte>();
             public Rectangle Rect { get; set; } = new Rectangle(0, 0, 0, 0);
             public string Extension { get; set; } = "png";
         }
 
-        private class LayoutAwareExtractionStrategy : IEventListener
+        private class LayoutParagraph
+        {
+            public List<LayoutElement> Elements { get; set; } = new();
+            public Wp.JustificationValues Alignment { get; set; } = Wp.JustificationValues.Left;
+        }
+
+        private class LayoutColumn
+        {
+            public float X { get; set; }
+            public float Width { get; set; }
+            public List<LayoutElement> Elements { get; set; } = new();
+        }
+
+        private class AdvancedLayoutStrategy : IEventListener
         {
             private readonly List<LayoutElement> _elements = new();
             private readonly List<ImageElement> _images = new();
@@ -336,20 +394,31 @@ namespace ConvertHub.Api.Services.Implementation
                     var text = info.GetText();
                     if (string.IsNullOrWhiteSpace(text)) return;
 
+                    var baseline = info.GetBaseline().GetBoundingRectangle();
+                    var ascent = info.GetAscentLine().GetBoundingRectangle();
+                    
+                    // Height is roughly Ascent - Baseline
+                    float height = Math.Abs(ascent.GetY() - baseline.GetY());
+                    if (height < 1) height = info.GetFontSize(); 
+
+                    var rect = new Rectangle(baseline.GetX(), baseline.GetY(), info.GetDescentLine().GetEndPoint().Get(0) - baseline.GetX(), height);
+
                     _elements.Add(new LayoutElement
                     {
                         Text = text,
-                        Rect = info.GetDescentLine().GetBoundingRectangle(),
+                        Rect = rect,
                         FontSize = info.GetFontSize(),
-                        IsBold = info.GetFont().GetFontProgram().GetFontNames().GetFontName().ToLower().Contains("bold")
+                        FontName = info.GetFont().GetFontProgram().GetFontNames().GetFontName(),
+                        IsBold = info.GetFont().GetFontProgram().GetFontNames().GetFontName().ToLower().Contains("bold"),
+                        IsItalic = info.GetFont().GetFontProgram().GetFontNames().GetFontName().ToLower().Contains("italic")
                     });
                 }
-                else if (type == EventType.RENDER_IMAGE && data is iTextData.ImageRenderInfo imageInfo)
+                else if (type == EventType.RENDER_IMAGE && data is iTextData.ImageRenderInfo imgInfo)
                 {
                     try
                     {
-                        var img = imageInfo.GetImage();
-                        var matrix = imageInfo.GetImageCtm();
+                        var img = imgInfo.GetImage();
+                        var matrix = imgInfo.GetImageCtm();
                         _images.Add(new ImageElement
                         {
                             Bytes = img.GetImageBytes(),
@@ -362,100 +431,166 @@ namespace ConvertHub.Api.Services.Implementation
             }
 
             public ICollection<EventType> GetSupportedEvents() => new[] { EventType.RENDER_TEXT, EventType.RENDER_IMAGE };
-            public List<LayoutElement> GetElements() => _elements.OrderByDescending(e => e.Rect.GetY()).ThenBy(e => e.Rect.GetX()).ToList();
+            public List<LayoutElement> GetElements() => _elements;
             public List<ImageElement> GetImages() => _images;
         }
 
-        private List<List<LayoutElement>> GroupElementsByRows(List<LayoutElement> elements)
+        private void ReconstructWords(List<LayoutElement> elements)
         {
-            var rows = new List<List<LayoutElement>>();
-            if (elements.Count == 0) return rows;
+            if (elements.Count < 2) return;
 
-            var currentRow = new List<LayoutElement> { elements[0] };
-            for (int i = 1; i < elements.Count; i++)
+            // Sort by Y (desc) then X (asc)
+            var sorted = elements.OrderByDescending(e => e.Rect.GetY()).ThenBy(e => e.Rect.GetX()).ToList();
+            
+            for (int i = 0; i < sorted.Count - 1; i++)
             {
-                if (Math.Abs(elements[i].Rect.GetY() - elements[i - 1].Rect.GetY()) < 5) currentRow.Add(elements[i]);
-                else { rows.Add(currentRow); currentRow = new List<LayoutElement> { elements[i] }; }
+                var current = sorted[i];
+                var next = sorted[i + 1];
+
+                // If on same line
+                if (Math.Abs(current.Rect.GetY() - next.Rect.GetY()) < 3)
+                {
+                    float gap = next.Rect.GetX() - (current.Rect.GetX() + current.Rect.GetWidth());
+                    float spaceThreshold = current.FontSize * 0.2f; // 20% of font size is a gap
+
+                    if (gap > spaceThreshold && !current.Text.EndsWith(" ") && !next.Text.StartsWith(" "))
+                    {
+                        current.Text += " ";
+                    }
+                }
             }
-            rows.Add(currentRow);
-            return rows;
         }
 
-        private bool IsTable(List<LayoutElement> row)
+        private List<LayoutColumn> DetectColumns(List<LayoutElement> elements, float pageWidth)
         {
-            if (row.Count < 2) return false;
-            for (int i = 1; i < row.Count; i++)
-                if (row[i].Rect.GetX() - (row[i - 1].Rect.GetX() + row[i - 1].Rect.GetWidth()) > 40) return true;
+            var columns = new List<LayoutColumn>();
+            if (!elements.Any()) return columns;
+
+            // Simple column detection: Check for significant vertical gaps in X coordinates
+            // This is a heuristic: we check if elements cluster around specific X ranges
+            var xClusters = elements.Select(e => e.Rect.GetX()).OrderBy(x => x).ToList();
+            
+            // For now, let's assume 1 column if spread is small, or 2 if there's a big gap
+            // A more advanced version would use a histogram
+            float midPoint = pageWidth / 2;
+            var leftSide = elements.Where(e => e.Rect.GetX() < midPoint).ToList();
+            var rightSide = elements.Where(e => e.Rect.GetX() >= midPoint).ToList();
+
+            if (rightSide.Count > elements.Count * 0.2) // If >20% is on the right, it's likely 2 columns
+            {
+                columns.Add(new LayoutColumn { X = 0, Width = midPoint, Elements = leftSide });
+                columns.Add(new LayoutColumn { X = midPoint, Width = midPoint, Elements = rightSide });
+            }
+            else
+            {
+                columns.Add(new LayoutColumn { X = 0, Width = pageWidth, Elements = elements });
+            }
+
+            return columns;
+        }
+
+        private bool IsNewParagraph(LayoutParagraph para, LayoutElement el)
+        {
+            if (!para.Elements.Any()) return true;
+            var last = para.Elements.Last();
+
+            // Vertical gap > 1.5x font size usually means new paragraph
+            float vGap = Math.Abs(last.Rect.GetY() - el.Rect.GetY());
+            if (vGap > last.FontSize * 1.5f) return true;
+
+            // If X coordinate jumps significantly back to the left
+            if (el.Rect.GetX() < last.Rect.GetX() - 50) return true;
+
             return false;
         }
 
-        private Wp.Paragraph CreateParagraph(List<LayoutElement> row)
+        private Wp.Paragraph CreateParagraph(LayoutParagraph layoutPara)
         {
             var para = new Wp.Paragraph();
             var paraProps = new Wp.ParagraphProperties();
-            if (row.Min(e => e.Rect.GetX()) > 150) paraProps.Append(new Wp.Justification { Val = Wp.JustificationValues.Center });
+            
+            // Alignment detection
+            float firstX = layoutPara.Elements.FirstOrDefault()?.Rect.GetX() ?? 0;
+            if (firstX > 200) paraProps.Append(new Wp.Justification { Val = Wp.JustificationValues.Center });
+            
             para.Append(paraProps);
 
-            foreach (var el in row)
+            // Group elements by line for better run management
+            var lines = layoutPara.Elements.GroupBy(e => Math.Round(e.Rect.GetY() / 2) * 2).OrderByDescending(g => g.Key);
+
+            foreach (var line in lines)
             {
-                var run = new Wp.Run();
-                var runProps = new Wp.RunProperties();
-                if (el.IsBold) runProps.Append(new Wp.Bold());
-                runProps.Append(new Wp.FontSize { Val = (el.FontSize * 2).ToString() });
-                run.Append(runProps);
-                run.AppendChild(new Wp.Text(el.Text) { Space = SpaceProcessingModeValues.Preserve });
-                para.Append(run);
+                foreach (var el in line.OrderBy(e => e.Rect.GetX()))
+                {
+                    var run = new Wp.Run();
+                    var runProps = new Wp.RunProperties();
+                    
+                    if (el.IsBold) runProps.Append(new Wp.Bold());
+                    if (el.IsItalic) runProps.Append(new Wp.Italic());
+                    
+                    runProps.Append(new Wp.FontSize { Val = (el.FontSize * 2).ToString() });
+                    runProps.Append(new Wp.RunFonts { Ascii = "Calibri", HighAnsi = "Calibri" });
+
+                    run.Append(runProps);
+                    run.AppendChild(new Wp.Text(el.Text) { Space = SpaceProcessingModeValues.Preserve });
+                    para.Append(run);
+                }
+                // Add a soft break if it's a multi-line paragraph
+                if (line.Key != lines.Last().Key) para.Append(new Wp.Run(new Wp.Break()));
             }
+
             return para;
         }
 
-        private Wp.Table CreateTable(List<LayoutElement> row)
-        {
-            var table = new Wp.Table();
-            var tr = new Wp.TableRow();
-            var cells = new List<List<LayoutElement>>();
-            var currentCell = new List<LayoutElement> { row[0] };
-            for (int i = 1; i < row.Count; i++)
-            {
-                if (row[i].Rect.GetX() - (row[i - 1].Rect.GetX() + row[i - 1].Rect.GetWidth()) > 30) { cells.Add(currentCell); currentCell = new List<LayoutElement> { row[i] }; }
-                else currentCell.Add(row[i]);
-            }
-            cells.Add(currentCell);
-
-            foreach (var cellGroup in cells)
-            {
-                var tc = new Wp.TableCell();
-                tc.Append(new Wp.TableCellProperties(new Wp.TableCellWidth { Type = Wp.TableWidthUnitValues.Auto }));
-                tc.Append(CreateParagraph(cellGroup));
-                tr.Append(tc);
-            }
-            table.Append(tr);
-            return table;
-        }
-
-        private void InsertImage(MainDocumentPart mainPart, Wp.Body body, ImageElement img)
+        private void InsertImageIntoDocx(MainDocumentPart mainPart, Wp.Body body, ImageElement img)
         {
             try
             {
-                var imagePart = mainPart.AddImagePart(img.Extension.ToLower() == "jpg" ? ImagePartType.Jpeg : ImagePartType.Png);
+                var imagePart = mainPart.AddImagePart(img.Extension.ToLower() == "jpg" || img.Extension.ToLower() == "jpeg" ? ImagePartType.Jpeg : ImagePartType.Png);
                 using (var stream = new MemoryStream(img.Bytes)) imagePart.FeedData(stream);
 
                 var relationshipId = mainPart.GetIdOfPart(imagePart);
-                var drawing = new Wp.Paragraph(new Wp.Run(new Wp.Drawing(new DocumentFormat.OpenXml.Drawing.Wordprocessing.Inline(
-                    new DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent { Cx = (long)(img.Rect.GetWidth() * 9525), Cy = (long)(img.Rect.GetHeight() * 9525) },
-                    new DocumentFormat.OpenXml.Drawing.Wordprocessing.EffectExtent { LeftEdge = 0L, TopEdge = 0L, RightEdge = 0L, BottomEdge = 0L },
-                    new DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties { Id = (UInt32Value)1U, Name = "Image" },
-                    new DocumentFormat.OpenXml.Drawing.Wordprocessing.NonVisualGraphicFrameDrawingProperties(new DocumentFormat.OpenXml.Drawing.GraphicFrameLocks { NoChangeAspect = true }),
-                    new DocumentFormat.OpenXml.Drawing.Graphic(new DocumentFormat.OpenXml.Drawing.GraphicData(
-                        new DocumentFormat.OpenXml.Drawing.Pictures.Picture(
-                            new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualPictureProperties(new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties { Id = (UInt32Value)0U, Name = "Image.png" }),
-                            new DocumentFormat.OpenXml.Drawing.Pictures.BlipFill(new DocumentFormat.OpenXml.Drawing.Blip { Embed = relationshipId, CompressionState = DocumentFormat.OpenXml.Drawing.BlipCompressionValues.Print }, new DocumentFormat.OpenXml.Drawing.Stretch(new DocumentFormat.OpenXml.Drawing.FillRectangle())),
-                            new DocumentFormat.OpenXml.Drawing.Pictures.ShapeProperties(new DocumentFormat.OpenXml.Drawing.Transform2D(new DocumentFormat.OpenXml.Drawing.Offset { X = 0L, Y = 0L }, new DocumentFormat.OpenXml.Drawing.Extents { Cx = (long)(img.Rect.GetWidth() * 9525), Cy = (long)(img.Rect.GetHeight() * 9525) }), new DocumentFormat.OpenXml.Drawing.PresetGeometry { Preset = DocumentFormat.OpenXml.Drawing.ShapeTypeValues.Rectangle }))
-                    ) { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
-                ) { DistanceFromTop = 0U, DistanceFromBottom = 0U, DistanceFromLeft = 0U, DistanceFromRight = 0U })));
-                body.Append(drawing);
+                
+                // EMUs: 1 point = 12700 EMUs, 1 inch = 914400 EMUs
+                // PDF points are 1/72 inch. So 1 PDF point = 12700 EMUs.
+                long widthEmus = (long)(img.Rect.GetWidth() * 12700);
+                long heightEmus = (long)(img.Rect.GetHeight() * 12700);
+
+                var element = new Wp.Paragraph(
+                    new Wp.Run(
+                        new Wp.Drawing(
+                            new DocumentFormat.OpenXml.Drawing.Wordprocessing.Inline(
+                                new DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent { Cx = widthEmus, Cy = heightEmus },
+                                new DocumentFormat.OpenXml.Drawing.Wordprocessing.EffectExtent { LeftEdge = 0L, TopEdge = 0L, RightEdge = 0L, BottomEdge = 0L },
+                                new DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties { Id = (UInt32Value)1U, Name = "Picture" },
+                                new DocumentFormat.OpenXml.Drawing.Wordprocessing.NonVisualGraphicFrameDrawingProperties(new DocumentFormat.OpenXml.Drawing.GraphicFrameLocks { NoChangeAspect = true }),
+                                new DocumentFormat.OpenXml.Drawing.Graphic(
+                                    new DocumentFormat.OpenXml.Drawing.GraphicData(
+                                        new DocumentFormat.OpenXml.Drawing.Pictures.Picture(
+                                            new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualPictureProperties(
+                                                new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties { Id = (UInt32Value)0U, Name = "Image" },
+                                                new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualPictureDrawingProperties()),
+                                            new DocumentFormat.OpenXml.Drawing.Pictures.BlipFill(
+                                                new DocumentFormat.OpenXml.Drawing.Blip { Embed = relationshipId, CompressionState = DocumentFormat.OpenXml.Drawing.BlipCompressionValues.Print },
+                                                new DocumentFormat.OpenXml.Drawing.Stretch(new DocumentFormat.OpenXml.Drawing.FillRectangle())),
+                                            new DocumentFormat.OpenXml.Drawing.Pictures.ShapeProperties(
+                                                new DocumentFormat.OpenXml.Drawing.Transform2D(
+                                                    new DocumentFormat.OpenXml.Drawing.Offset { X = 0L, Y = 0L },
+                                                    new DocumentFormat.OpenXml.Drawing.Extents { Cx = widthEmus, Cy = heightEmus }),
+                                                new DocumentFormat.OpenXml.Drawing.PresetGeometry { Preset = DocumentFormat.OpenXml.Drawing.ShapeTypeValues.Rectangle }))
+                                    ) { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
+                            ) { DistanceFromTop = 0U, DistanceFromBottom = 0U, DistanceFromLeft = 0U, DistanceFromRight = 0U }
+                        )
+                    )
+                );
+                body.Append(element);
             }
-            catch { }
+            catch (Exception ex) { _logger.LogWarning("Failed to insert image: {Msg}", ex.Message); }
+        }
+
+        private void SetupDocxStyles(MainDocumentPart mainPart)
+        {
+            // Optional: Add a StylesDefinitionsPart to define global fonts and sizes
         }
 
         private void ConvertPdfToTxt(string src, string dst)
