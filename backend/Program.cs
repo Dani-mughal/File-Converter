@@ -30,6 +30,7 @@ builder.Services.AddSingleton<JobManager>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<PdfConversionService>();
 builder.Services.AddScoped<ImageConversionService>();
+builder.Services.AddScoped<SvgConversionService>();
 builder.Services.AddScoped<MediaConversionService>();
 builder.Services.AddScoped<TextDataConversionService>();
 builder.Services.AddScoped<ArchiveConversionService>();
@@ -37,6 +38,11 @@ builder.Services.AddScoped<IConversionFactory, ConversionFactory>();
 builder.Services.AddScoped<IConversionService, PdfConversionService>();
 
 // Configure upload limits (200MB)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 209715200;
+});
+
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 209715200;

@@ -79,7 +79,7 @@ namespace ConvertHub.Api.Services.Implementation
             { ConversionType.JpgToGif,          "image" },
             { ConversionType.GifToJpg,          "image" },
             { ConversionType.PngToSvg,          "image" },
-            { ConversionType.SvgToPng,          "image" },
+            { ConversionType.SvgToPng,          "svg" },
             { ConversionType.PngToIco,          "image" },
             { ConversionType.IcoToPng,          "image" },
             { ConversionType.PngToPdf,          "image" },
@@ -95,10 +95,10 @@ namespace ConvertHub.Api.Services.Implementation
             { ConversionType.JfifToPng,         "image" },
             { ConversionType.ImageConverter,    "image" },
             // Vector/Design
-            { ConversionType.SvgToJpg,          "image" },
-            { ConversionType.SvgToPdf,          "image" },
-            { ConversionType.SvgToWebp,         "image" },
-            { ConversionType.SvgToIco,          "image" },
+            { ConversionType.SvgToJpg,          "svg" },
+            { ConversionType.SvgToPdf,          "svg" },
+            { ConversionType.SvgToWebp,         "svg" },
+            { ConversionType.SvgToIco,          "svg" },
             { ConversionType.SvgToEps,          "image" },
             { ConversionType.AiToSvg,           "image" },
             { ConversionType.AiToPdf,           "image" },
@@ -200,19 +200,23 @@ namespace ConvertHub.Api.Services.Implementation
                 or ConversionType.JpgToWebp or ConversionType.WebpToJpg or ConversionType.PngToWebp 
                 or ConversionType.JpgToBmp or ConversionType.BmpToJpg or ConversionType.JpgToTiff 
                 or ConversionType.TiffToJpg or ConversionType.JpgToGif or ConversionType.GifToJpg 
-                or ConversionType.PngToSvg or ConversionType.SvgToPng or ConversionType.PngToIco 
+                or ConversionType.PngToSvg or ConversionType.PngToIco 
                 or ConversionType.IcoToPng or ConversionType.PngToPdf or ConversionType.WebpToPng 
                 or ConversionType.TiffToPdf or ConversionType.BmpToPng or ConversionType.HeicToJpg 
                 or ConversionType.HeicToPng or ConversionType.AvifToPng or ConversionType.RawToJpg 
-                or ConversionType.RawToPng or ConversionType.RawToTiff or ConversionType.SvgToJpg 
-                or ConversionType.SvgToPdf or ConversionType.SvgToWebp or ConversionType.SvgToIco 
-                or ConversionType.SvgToEps or ConversionType.AiToSvg or ConversionType.AiToPdf 
+                or ConversionType.RawToPng or ConversionType.RawToTiff 
+                or ConversionType.AiToSvg or ConversionType.AiToPdf 
                 or ConversionType.AiToPng or ConversionType.PsdToJpg or ConversionType.PsdToPng 
                 or ConversionType.PsdToWebp or ConversionType.PsdToPdf or ConversionType.EpsToSvg 
                 or ConversionType.EpsToPdf or ConversionType.EpsToPng or ConversionType.ImageToPdf 
                 or ConversionType.JpgToPdf or ConversionType.HeicToPdf or ConversionType.JfifToPng 
                 or ConversionType.JfifToJpg or ConversionType.ImageConverter
                     => _serviceProvider.GetRequiredService<ImageConversionService>(),
+
+                // 📐 SVG (Optimized)
+                ConversionType.SvgToPng or ConversionType.SvgToJpg or ConversionType.SvgToPdf 
+                or ConversionType.SvgToWebp or ConversionType.SvgToIco or ConversionType.SvgToEps
+                    => _serviceProvider.GetRequiredService<SvgConversionService>(),
 
                 // 🎬 Media (Video & Audio)
                 ConversionType.Mp4ToMp3 or ConversionType.VideoToMp3 or ConversionType.Mp3ToWav 

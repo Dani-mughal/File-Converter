@@ -78,17 +78,12 @@ namespace ConvertHub.Api.Services.Implementation
                 case ConversionType.HtmlToPdf:
                     await Task.Run(() => ConvertOfficeToPdf(sourceFilePath, outputFilePath));
                     break;
-                case ConversionType.TxtToDocx:
+                /*case ConversionType.TxtToDocx:
                     await Task.Run(() => ConvertTxtToDocx(sourceFilePath, outputFilePath));
-                    break;
-                case ConversionType.TxtToHtml:
+                    break;*/
+                /*case ConversionType.TxtToHtml:
                     await Task.Run(() => ConvertTxtToHtml(sourceFilePath, outputFilePath));
-                    break;
-                // PPT → PDF (via LibreOffice if available, else placeholder)
-                case ConversionType.PptToPdf:
-                case ConversionType.PptxToPdf:
-                    await Task.Run(() => ConvertOfficeToPdf(sourceFilePath, outputFilePath));
-                    break;
+                    break;*/
                 case ConversionType.PptToJpg:
                 case ConversionType.PptToPng:
                     await Task.Run(() => ConvertOfficeToPdf(sourceFilePath, outputFilePath));
@@ -98,11 +93,6 @@ namespace ConvertHub.Api.Services.Implementation
                 case ConversionType.XlsToCsv:
                 case ConversionType.XlsxToCsv:
                     await Task.Run(() => ConvertOfficeToCsv(sourceFilePath, outputFilePath));
-                    break;
-                case ConversionType.XlsToPdf:
-                case ConversionType.XlsxToPdf:
-                case ConversionType.ExcelToPdf:
-                    await Task.Run(() => ConvertOfficeToPdf(sourceFilePath, outputFilePath));
                     break;
                 case ConversionType.XlsToJson:
                 case ConversionType.XlsxToJson:
@@ -126,9 +116,6 @@ namespace ConvertHub.Api.Services.Implementation
                     break;
 
                 // HTML → PDF/Docx
-                case ConversionType.HtmlToPdf:
-                    await Task.Run(() => ConvertHtmlToPdf(sourceFilePath, outputFilePath));
-                    break;
                 case ConversionType.HtmlToDocx:
                     await Task.Run(() => ConvertHtmlToDocx(sourceFilePath, outputFilePath));
                     break;
@@ -142,9 +129,9 @@ namespace ConvertHub.Api.Services.Implementation
                     await Task.Run(() => ExtractZip(sourceFilePath, outputFilePath));
                     break;
 
-                case ConversionType.EpubToPdf:
+                /*case ConversionType.EpubToPdf:
                     await Task.Run(() => ConvertEpubToPdf(sourceFilePath, outputFilePath));
-                    break;
+                    break;*/
                 case ConversionType.MergePdf:
                     await Task.Run(() => MergePdfs(sourceFilePath, outputFilePath));
                     break;
