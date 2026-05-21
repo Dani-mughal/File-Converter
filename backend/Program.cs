@@ -37,16 +37,19 @@ builder.Services.AddScoped<TextDataConversionService>();
 builder.Services.AddScoped<ArchiveConversionService>();
 builder.Services.AddScoped<IConversionFactory, ConversionFactory>();
 builder.Services.AddScoped<IConversionService, PdfConversionService>();
+builder.Services.AddScoped<IndexNowService>(); // Add IndexNow Service
 
-// Configure upload limits (200MB)
+// Configure upload limits (512MB)
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 209715200;
+    options.Limits.MaxRequestBodySize = 536870912; // 512MB
 });
 
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 209715200;
+    options.MultipartBodyLengthLimit = 536870912; // 512MB
+    options.ValueLengthLimit = 536870912;
+    options.MemoryBufferThreshold = 536870912;
 });
 
 // CORS — allow all origins
@@ -96,10 +99,15 @@ catch (Exception ex)
 }
 
 // CORRECT middleware order: CORS → Routing → Exception Handler → Endpoints
+// Production middleware
+app.UseSecurityHeaders();
 app.UseCors("AllowAll");
 app.UseRouting();
 app.UseExceptionHandling();
 app.MapControllers();
+
+// IndexNow Key Verification File
+app.MapGet("/90c6861616c4493e813f0a5f973715df.txt", () => Results.Text("90c6861616c4493e813f0a5f973715df"));
 
 // Root health check
 app.MapGet("/", () => Results.Ok(new { status = "online", service = "ConvertHub API", time = DateTime.UtcNow }));

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { HiOutlineArrowDownTray, HiOutlineArrowPath } from 'react-icons/hi2';
+import { trackEvent } from './AnalyticsTracker';
 
 export default function ResultDownload({ downloadUrl, fileName, onReset }) {
   const { darkMode } = useTheme();
@@ -43,6 +44,7 @@ export default function ResultDownload({ downloadUrl, fileName, onReset }) {
           href={downloadUrl}
           download={fileName}
           id="download-btn"
+          onClick={() => trackEvent('download_clicked', { fileName })}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           className="inline-flex items-center gap-2.5 px-8 py-3.5 gradient-bg text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-shadow text-sm"

@@ -68,7 +68,7 @@ namespace ConvertHub.Api.Controllers
 
         // POST /api/convert  — start a conversion job
         [HttpPost]
-        public async Task<IActionResult> StartConversion(
+        public IActionResult StartConversion(
             [FromForm] string? filePath,
             [FromForm] List<string>? filePaths,
             [FromForm] string targetFormat,
@@ -239,6 +239,9 @@ namespace ConvertHub.Api.Controllers
             { ("pdf", "doc"),   ConversionType.PdfToWord },
             { ("pdf", "txt"),   ConversionType.PdfToTxt },
             { ("pdf", "html"),  ConversionType.PdfToHtml },
+            { ("pdf", "compress"), ConversionType.CompressPdf },
+            { ("pdf", "split"), ConversionType.SplitPdf },
+            { ("pdf", "merge"), ConversionType.MergePdf },
             { ("pdf", "epub"),  ConversionType.PdfToEpub },
             { ("pdf", "pptx"),  ConversionType.PdfToPptx },
             { ("pdf", "xlsx"),  ConversionType.PdfToXlsx },
@@ -392,6 +395,12 @@ namespace ConvertHub.Api.Controllers
             // Special cases for Archive
             if (target == "zip" || target == "archive") return ConversionType.Zip;
             if (src == "zip" && (target == "unzip" || target == "extract")) return ConversionType.Unzip;
+            if (target.StartsWith("compress-pdf"))
+            {
+                if (target.EndsWith("-low")) return ConversionType.CompressPdfLow;
+                if (target.EndsWith("-high")) return ConversionType.CompressPdfHigh;
+                return ConversionType.CompressPdfMed;
+            }
 
             // Direct lookup
             if (_conversionMap.TryGetValue((src, target), out var ct))

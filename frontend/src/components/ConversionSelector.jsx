@@ -75,13 +75,13 @@ const FORMAT_METADATA = {
   'html': { label: 'HTML', icon: HiOutlineDocumentText, gradient: 'from-orange-500 to-amber-600' },
   'jpg': { label: 'JPG', icon: HiOutlinePhoto, gradient: 'from-pink-500 to-rose-600' },
   'png': { label: 'PNG', icon: HiOutlinePhoto, gradient: 'from-emerald-500 to-teal-600' },
-  'epub': { label: 'EPUB', icon: HiOutlineDocumentText, gradient: 'from-purple-500 to-indigo-600' },
+  'epub': { label: 'EPUB', icon: HiOutlineDocumentText, gradient: 'from-primary-500 to-blue-600' },
   'xlsx': { label: 'XLSX', icon: HiOutlineTableCells, gradient: 'from-green-500 to-emerald-600' },
   'csv': { label: 'CSV', icon: HiOutlineTableCells, gradient: 'from-teal-500 to-cyan-600' },
   'json': { label: 'JSON', icon: HiOutlineSparkles, gradient: 'from-amber-500 to-orange-600' },
   'mp3': { label: 'MP3', icon: HiOutlineVideoCamera, gradient: 'from-rose-500 to-red-600' },
-  'mp4': { label: 'MP4', icon: HiOutlineVideoCamera, gradient: 'from-indigo-500 to-blue-600' },
-  'gif': { label: 'GIF', icon: HiOutlineGif, gradient: 'from-fuchsia-500 to-purple-600' },
+  'mp4': { label: 'MP4', icon: HiOutlineVideoCamera, gradient: 'from-primary-500 to-blue-600' },
+  'gif': { label: 'GIF', icon: HiOutlineGif, gradient: 'from-fuchsia-500 to-primary-600' },
   'zip': { label: 'ZIP', icon: HiOutlineArchiveBox, gradient: 'from-slate-700 to-slate-900' },
   'unzip': { label: 'Unzip', icon: HiOutlineArchiveBox, gradient: 'from-zinc-700 to-zinc-900' },
   'rtf': { label: 'RTF', icon: HiOutlineDocumentText, gradient: 'from-slate-400 to-slate-600' },
@@ -90,15 +90,15 @@ const FORMAT_METADATA = {
   'mov': { label: 'MOV', icon: HiOutlineVideoCamera, gradient: 'from-gray-500 to-gray-700' },
   'svg': { label: 'SVG', icon: HiOutlinePhoto, gradient: 'from-orange-400 to-orange-600' },
   'webp': { label: 'WEBP', icon: HiOutlinePhoto, gradient: 'from-cyan-400 to-cyan-600' },
-  'heic': { label: 'HEIC', icon: HiOutlinePhoto, gradient: 'from-indigo-400 to-indigo-600' },
+  'heic': { label: 'HEIC', icon: HiOutlinePhoto, gradient: 'from-primary-400 to-primary-600' },
   'avif': { label: 'AVIF', icon: HiOutlinePhoto, gradient: 'from-pink-400 to-pink-600' },
   'psd': { label: 'PSD', icon: HiOutlinePhoto, gradient: 'from-blue-600 to-blue-800' },
   'ai': { label: 'AI', icon: HiOutlinePhoto, gradient: 'from-orange-600 to-red-600' },
   'eps': { label: 'EPS', icon: HiOutlinePhoto, gradient: 'from-slate-600 to-slate-800' },
-  'mkv': { label: 'MKV', icon: HiOutlineVideoCamera, gradient: 'from-violet-500 to-purple-600' },
+  'mkv': { label: 'MKV', icon: HiOutlineVideoCamera, gradient: 'from-primary-500 to-blue-600' },
   'webm': { label: 'WEBM', icon: HiOutlineVideoCamera, gradient: 'from-emerald-400 to-emerald-600' },
   'xml': { label: 'XML', icon: HiOutlineSparkles, gradient: 'from-amber-400 to-amber-600' },
-  'yaml': { label: 'YAML', icon: HiOutlineSparkles, gradient: 'from-violet-400 to-violet-600' },
+  'yaml': { label: 'YAML', icon: HiOutlineSparkles, gradient: 'from-primary-400 to-primary-600' },
 };
 
 export default function ConversionSelector({ selected, onSelect, files = [] }) {
@@ -135,7 +135,7 @@ export default function ConversionSelector({ selected, onSelect, files = [] }) {
         <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
           Select Target Format
         </h3>
-        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
+        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${darkMode ? 'bg-primary-500/10 text-primary-400' : 'bg-primary-50 text-primary-600'}`}>
           {files.length > 1 ? 'Multiple Files' : `Input: ${files[0].name.split('.').pop()?.toUpperCase()}`}
         </span>
       </div>
@@ -144,7 +144,8 @@ export default function ConversionSelector({ selected, onSelect, files = [] }) {
         {options.length > 0 ? (
           options.map((opt, index) => {
             const Icon = opt.icon;
-            const isSelected = selected === opt.id;
+            // Support matching against full tool IDs (e.g., pdf-to-docx matching docx)
+            const isSelected = selected === opt.id || (selected && selected.endsWith(`-to-${opt.id}`));
 
             return (
               <motion.button
@@ -189,13 +190,14 @@ export default function ConversionSelector({ selected, onSelect, files = [] }) {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-indigo-500"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-primary-500"
                   >
-                    <svg className="w-2.5 h-2.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                    <svg className="w-2.5 h-2.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </motion.div>
                 )}
+
               </motion.button>
             );
           })

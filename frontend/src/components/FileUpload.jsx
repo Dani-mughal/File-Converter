@@ -10,7 +10,22 @@ import {
   HiOutlinePhoto,
 } from 'react-icons/hi2';
 
-const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50 MB
+const LIMITS = {
+  video: 500 * 1024 * 1024, // 500 MB
+  pdf: 200 * 1024 * 1024,   // 200 MB
+  image: 100 * 1024 * 1024, // 100 MB
+  archive: 200 * 1024 * 1024, // 200 MB
+  default: 100 * 1024 * 1024 // 100 MB
+};
+
+function getLimitByToolId(toolId) {
+  if (!toolId) return LIMITS.default;
+  if (toolId.includes('pdf')) return LIMITS.pdf;
+  if (toolId.includes('mp4') || toolId.includes('video') || toolId.includes('mov') || toolId.includes('avi') || toolId.includes('mkv')) return LIMITS.video;
+  if (toolId.includes('jpg') || toolId.includes('png') || toolId.includes('webp') || toolId.includes('svg') || toolId.includes('image')) return LIMITS.image;
+  if (toolId.includes('zip') || toolId.includes('rar') || toolId.includes('7z') || toolId.includes('archive')) return LIMITS.archive;
+  return LIMITS.default;
+}
 
 const ACCEPTED_TYPES = {
   'application/pdf': ['.pdf'],
@@ -56,14 +71,16 @@ function formatSize(bytes) {
 function getFileIcon(type) {
   if (type?.includes('pdf')) return <HiOutlineDocument className="w-5 h-5 text-red-500" />;
   if (type?.includes('image')) return <HiOutlinePhoto className="w-5 h-5 text-blue-500" />;
-  if (type?.includes('zip')) return <HiOutlineDocument className="w-5 h-5 text-yellow-600" />;
+  if (type?.includes('zip')) return <HiOutlineDocument className="w-5 h-5 text-amber-600" />;
   if (type?.includes('video')) return <HiOutlineDocument className="w-5 h-5 text-rose-500" />;
-  if (type?.includes('audio')) return <HiOutlineDocument className="w-5 h-5 text-purple-500" />;
+  if (type?.includes('audio')) return <HiOutlineDocument className="w-5 h-5 text-primary-500" />;
   return <HiOutlineDocument className="w-5 h-5 text-slate-500" />;
 }
 
-export default function FileUpload({ files = [], onFilesChange, error, onError }) {
+
+export default function FileUpload({ files = [], onFilesChange, error, onError, toolId }) {
   const { darkMode } = useTheme();
+  const FILE_SIZE_LIMIT = getLimitByToolId(toolId);
 
   const onDrop = useCallback(
     (acceptedFiles, rejectedFiles) => {

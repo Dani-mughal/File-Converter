@@ -25,7 +25,9 @@ export const CATEGORIES = [
       { label: 'PPT to PDF', id: 'pptx-to-pdf' },
       { label: 'Merge PDF', id: 'merge-pdf' },
       { label: 'Split PDF', id: 'split-pdf' },
-      { label: 'Compress PDF', id: 'compress-pdf' },
+      { label: 'Compress PDF (High)', id: 'compress-pdf-high' },
+      { label: 'Compress PDF (Medium)', id: 'compress-pdf-med' },
+      { label: 'Compress PDF (Low)', id: 'compress-pdf-low' },
       { label: 'Image to PDF', id: 'image-to-pdf' }
     ]
   },
@@ -52,8 +54,8 @@ export const CATEGORIES = [
     id: 'media',
     title: 'Media Tools',
     icon: HiOutlineVideoCamera,
-    color: 'text-purple-600 dark:text-purple-400',
-    bg: 'bg-purple-100 dark:bg-purple-500/10',
+    color: 'text-primary-600 dark:text-primary-400',
+    bg: 'bg-primary-100 dark:bg-primary-500/10',
     links: [
       { label: 'MP4 to MP3', id: 'mp4-to-mp3' },
       { label: 'Video to GIF', id: 'video-to-gif' },
@@ -65,6 +67,7 @@ export const CATEGORIES = [
       { label: 'MP4 to GIF', id: 'mp4-to-gif' }
     ]
   },
+
   {
     id: 'archive',
     title: 'Archive & Data',
@@ -92,16 +95,31 @@ export const getCategoryByToolId = (toolId) => {
 
 export const getRelatedTools = (toolId, limit = 6) => {
   const category = getCategoryByToolId(toolId);
+  
   if (!category) {
-    // Return a mix of popular tools if no category is found
+    // Return a curated list of most popular tools across categories
     return [
       { label: 'PDF to Word', id: 'pdf-to-docx' },
+      { label: 'Merge PDF', id: 'merge-pdf' },
+      { label: 'Compress PDF', id: 'compress-pdf-high' },
       { label: 'JPG to PNG', id: 'jpg-to-png' },
-      { label: 'MP4 to MP3', id: 'mp4-to-mp3' },
-      { label: 'Word to PDF', id: 'docx-to-pdf' },
-      { label: 'JSON to CSV', id: 'json-to-csv' },
-      { label: 'Video to GIF', id: 'video-to-gif' }
+      { label: 'Video to MP3', id: 'mp4-to-mp3' },
+      { label: 'JSON to CSV', id: 'json-to-csv' }
     ].slice(0, limit);
   }
-  return category.links.filter(link => link.id !== toolId).slice(0, limit);
+
+  // Filter out the current tool and return tools from the same category first
+  const related = category.links.filter(link => link.id !== toolId);
+  
+  if (related.length < limit) {
+    // If not enough in same category, supplement with some from other popular categories
+    const others = CATEGORIES
+      .filter(cat => cat.id !== category.id)
+      .flatMap(cat => cat.links.slice(0, 2))
+      .filter(link => link.id !== toolId);
+    
+    return [...related, ...others].slice(0, limit);
+  }
+
+  return related.slice(0, limit);
 };

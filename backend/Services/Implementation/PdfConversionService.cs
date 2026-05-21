@@ -139,7 +139,10 @@ namespace ConvertHub.Api.Services.Implementation
                     await Task.Run(() => SplitPdf(sourceFilePath, outputFilePath));
                     break;
                 case ConversionType.CompressPdf:
-                    await Task.Run(() => CompressPdf(sourceFilePath, outputFilePath));
+                case ConversionType.CompressPdfLow:
+                case ConversionType.CompressPdfMed:
+                case ConversionType.CompressPdfHigh:
+                    await Task.Run(() => CompressPdf(sourceFilePath, outputFilePath, conversionType));
                     break;
                 default:
                     throw new NotSupportedException($"PDF Service does not support conversion '{conversionType}'.");
@@ -165,10 +168,11 @@ namespace ConvertHub.Api.Services.Implementation
             {
                 using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
                 var header = new byte[5];
-                await fs.ReadAsync(header, 0, 5);
+                await fs.ReadExactlyAsync(header, 0, 5);
                 if (System.Text.Encoding.ASCII.GetString(header) != "%PDF-")
                 {
                     fs.Close();
+                    // Don't delete or throw just yet, maybe let it be. But we can keep the throw.
                     File.Delete(path);
                     throw new InvalidOperationException("Conversion failed: Output is not a valid PDF.");
                 }
@@ -182,6 +186,9 @@ namespace ConvertHub.Api.Services.Implementation
             ConversionType.WordToPdf or ConversionType.DocxToPdf or ConversionType.TxtToPdf or ConversionType.ImageToPdf or ConversionType.HtmlToPdf => "application/pdf",
             ConversionType.PdfToTxt => "text/plain",
             ConversionType.PdfToHtml or ConversionType.TxtToHtml => "text/html",
+            ConversionType.SplitPdf => "application/zip",
+            ConversionType.MergePdf or ConversionType.CompressPdf or ConversionType.CompressPdfLow 
+            or ConversionType.CompressPdfMed or ConversionType.CompressPdfHigh => "application/pdf",
             _ => "application/octet-stream"
         };
 
@@ -198,7 +205,10 @@ namespace ConvertHub.Api.Services.Implementation
             ConversionType.PdfToHtml or ConversionType.TxtToHtml => ".html",
             ConversionType.WordToPdf or ConversionType.DocxToPdf or ConversionType.DocToPdf or ConversionType.TxtToPdf
                 or ConversionType.ImageToPdf or ConversionType.HtmlToPdf or ConversionType.PptToPdf or ConversionType.PptxToPdf
-                or ConversionType.XlsToPdf or ConversionType.XlsxToPdf or ConversionType.ExcelToPdf or ConversionType.EpubToPdf => ".pdf",
+                or ConversionType.XlsToPdf or ConversionType.XlsxToPdf or ConversionType.ExcelToPdf or ConversionType.EpubToPdf
+                or ConversionType.MergePdf or ConversionType.CompressPdf or ConversionType.CompressPdfLow 
+                or ConversionType.CompressPdfMed or ConversionType.CompressPdfHigh => ".pdf",
+            ConversionType.SplitPdf => ".zip",
             _ => ".tmp"
         };
 
@@ -306,31 +316,24 @@ namespace ConvertHub.Api.Services.Implementation
                             .OrderByDescending(e => e.Rect.GetY())
                             .ToList();
 
-                        // 4. Section & Paragraph Grouping
-                        LayoutParagraph? currentPara = null;
+                        // 4. Section & Content Grouping
+                        var contentClusters = GroupByContent(colElements, colImages);
                         
-                        foreach (var item in sortedContent)
+                        foreach (var cluster in contentClusters)
                         {
-                            if (item is LayoutElement el)
+                            if (cluster.IsTable)
                             {
-                                if (currentPara == null || IsNewParagraph(currentPara, el))
-                                {
-                                    if (currentPara != null) body.Append(CreateParagraph(currentPara));
-                                    currentPara = new LayoutParagraph();
-                                }
-                                currentPara.Elements.Add(el);
+                                body.Append(CreateTable(cluster.Elements));
                             }
-                            else if (item is ImageElement img)
+                            else if (cluster.Image != null)
                             {
-                                if (currentPara != null)
-                                {
-                                    body.Append(CreateParagraph(currentPara));
-                                    currentPara = null;
-                                }
-                                InsertImageIntoDocx(mainPart, body, img);
+                                InsertImageIntoDocx(mainPart, body, cluster.Image);
+                            }
+                            else
+                            {
+                                body.Append(CreateParagraph(new LayoutParagraph { Elements = cluster.Elements }));
                             }
                         }
-                        if (currentPara != null) body.Append(CreateParagraph(currentPara));
                     }
 
                     if (i < pdfDoc.GetNumberOfPages())
@@ -347,6 +350,71 @@ namespace ConvertHub.Api.Services.Implementation
 
                 wordDoc.Save();
             });
+        }
+
+        private class ContentCluster
+        {
+            public List<LayoutElement> Elements { get; set; } = new();
+            public ImageElement? Image { get; set; }
+            public bool IsTable { get; set; }
+        }
+
+        private List<ContentCluster> GroupByContent(List<LayoutElement> elements, List<ImageElement> images)
+        {
+            var clusters = new List<ContentCluster>();
+            var sortedElements = elements.OrderByDescending(e => e.Rect.GetY()).ToList();
+            var sortedImages = images.OrderByDescending(e => e.Rect.GetY()).ToList();
+
+            // Simple vertical grouping
+            float lastY = -1;
+            ContentCluster? currentCluster = null;
+
+            foreach (var el in sortedElements)
+            {
+                if (currentCluster == null || Math.Abs(lastY - el.Rect.GetY()) > 15)
+                {
+                    if (currentCluster != null) 
+                    {
+                        currentCluster.IsTable = DetectTableHeuristic(currentCluster.Elements);
+                        clusters.Add(currentCluster);
+                    }
+                    currentCluster = new ContentCluster();
+                }
+                currentCluster.Elements.Add(el);
+                lastY = el.Rect.GetY();
+            }
+
+            if (currentCluster != null)
+            {
+                currentCluster.IsTable = DetectTableHeuristic(currentCluster.Elements);
+                clusters.Add(currentCluster);
+            }
+
+            // Mix in images based on Y
+            foreach (var img in sortedImages)
+            {
+                var idx = clusters.FindIndex(c => c.Elements.Any() && c.Elements.First().Rect.GetY() < img.Rect.GetY());
+                if (idx == -1) clusters.Add(new ContentCluster { Image = img });
+                else clusters.Insert(idx, new ContentCluster { Image = img });
+            }
+
+            return clusters;
+        }
+
+        private bool DetectTableHeuristic(List<LayoutElement> elements)
+        {
+            if (elements.Count < 3) return false;
+            // If multiple elements share roughly the same Y but have large X gaps, it's a table row
+            var rows = elements.GroupBy(e => Math.Round(e.Rect.GetY() / 2) * 2);
+            foreach (var row in rows)
+            {
+                var sorted = row.OrderBy(e => e.Rect.GetX()).ToList();
+                for (int i = 0; i < sorted.Count - 1; i++)
+                {
+                    if (sorted[i+1].Rect.GetX() - (sorted[i].Rect.GetX() + sorted[i].Rect.GetWidth()) > 40) return true;
+                }
+            }
+            return false;
         }
 
         private interface IPageElement { Rectangle Rect { get; } }
@@ -509,37 +577,122 @@ namespace ConvertHub.Api.Services.Implementation
             var para = new Wp.Paragraph();
             var paraProps = new Wp.ParagraphProperties();
             
-            // Alignment detection
+            // 1. Detect Alignment
             float firstX = layoutPara.Elements.FirstOrDefault()?.Rect.GetX() ?? 0;
             if (firstX > 200) paraProps.Append(new Wp.Justification { Val = Wp.JustificationValues.Center });
             
+            // 2. Add Paragraph Spacing
+            paraProps.Append(new Wp.SpacingBetweenLines { After = "120", Line = "240", LineRule = Wp.LineSpacingRuleValues.Auto });
             para.Append(paraProps);
 
-            // Group elements by line for better run management
+            // 3. Group by lines and detect if this paragraph is actually a list or table row
             var lines = layoutPara.Elements.GroupBy(e => Math.Round(e.Rect.GetY() / 2) * 2).OrderByDescending(g => g.Key);
 
             foreach (var line in lines)
             {
-                foreach (var el in line.OrderBy(e => e.Rect.GetX()))
+                var sortedLine = line.OrderBy(e => e.Rect.GetX()).ToList();
+                
+                // If the line has very large gaps, it might be better handled as a table, 
+                // but for a paragraph we'll use Tabs or Spaces
+                for (int i = 0; i < sortedLine.Count; i++)
                 {
+                    var el = sortedLine[i];
                     var run = new Wp.Run();
                     var runProps = new Wp.RunProperties();
                     
+                    // Formatting
                     if (el.IsBold) runProps.Append(new Wp.Bold());
                     if (el.IsItalic) runProps.Append(new Wp.Italic());
                     
                     runProps.Append(new Wp.FontSize { Val = (el.FontSize * 2).ToString() });
-                    runProps.Append(new Wp.RunFonts { Ascii = "Calibri", HighAnsi = "Calibri" });
+                    
+                    // Font Mapping
+                    string fontName = MapFont(el.FontName);
+                    runProps.Append(new Wp.RunFonts { Ascii = fontName, HighAnsi = fontName });
 
                     run.Append(runProps);
                     run.AppendChild(new Wp.Text(el.Text) { Space = SpaceProcessingModeValues.Preserve });
                     para.Append(run);
+
+                    // Add spacing based on horizontal gap
+                    if (i < sortedLine.Count - 1)
+                    {
+                        float gap = sortedLine[i+1].Rect.GetX() - (el.Rect.GetX() + el.Rect.GetWidth());
+                        if (gap > el.FontSize * 2) // Large gap -> Tab
+                        {
+                            para.Append(new Wp.Run(new Wp.TabChar()));
+                        }
+                    }
                 }
-                // Add a soft break if it's a multi-line paragraph
-                if (line.Key != lines.Last().Key) para.Append(new Wp.Run(new Wp.Break()));
+                
+                if (line.Key != lines.Last().Key)
+                    para.Append(new Wp.Run(new Wp.Break()));
             }
 
             return para;
+        }
+
+        private string MapFont(string pdfFontName)
+        {
+            var lower = pdfFontName.ToLower();
+            if (lower.Contains("arial")) return "Arial";
+            if (lower.Contains("times")) return "Times New Roman";
+            if (lower.Contains("courier")) return "Courier New";
+            if (lower.Contains("verdana")) return "Verdana";
+            if (lower.Contains("helvetica")) return "Arial";
+            return "Calibri";
+        }
+
+        private Wp.Table CreateTable(List<LayoutElement> tableElements)
+        {
+            var table = new Wp.Table();
+            var tableProps = new Wp.TableProperties(
+                new Wp.TableBorders(
+                    new Wp.TopBorder { Val = Wp.BorderValues.Single, Size = 4 },
+                    new Wp.BottomBorder { Val = Wp.BorderValues.Single, Size = 4 },
+                    new Wp.LeftBorder { Val = Wp.BorderValues.Single, Size = 4 },
+                    new Wp.RightBorder { Val = Wp.BorderValues.Single, Size = 4 },
+                    new Wp.InsideHorizontalBorder { Val = Wp.BorderValues.Single, Size = 4 },
+                    new Wp.InsideVerticalBorder { Val = Wp.BorderValues.Single, Size = 4 }
+                ),
+                new Wp.TableWidth { Type = Wp.TableWidthUnitValues.Pct, Width = "5000" } // 100%
+            );
+            table.AppendChild(tableProps);
+
+            // Group into rows
+            var rows = tableElements.GroupBy(e => Math.Round(e.Rect.GetY() / 5) * 5).OrderByDescending(g => g.Key);
+
+            foreach (var rowGroup in rows)
+            {
+                var tr = new Wp.TableRow();
+                // Simple heuristic: split row elements into cells by X gaps
+                var elements = rowGroup.OrderBy(e => e.Rect.GetX()).ToList();
+                var cells = new List<List<LayoutElement>>();
+                var currentCell = new List<LayoutElement>();
+
+                foreach (var el in elements)
+                {
+                    if (currentCell.Count > 0 && el.Rect.GetX() - (currentCell.Last().Rect.GetX() + currentCell.Last().Rect.GetWidth()) > 30)
+                    {
+                        cells.Add(currentCell);
+                        currentCell = new List<LayoutElement>();
+                    }
+                    currentCell.Add(el);
+                }
+                if (currentCell.Count > 0) cells.Add(currentCell);
+
+                foreach (var cellElements in cells)
+                {
+                    var tc = new Wp.TableCell();
+                    tc.Append(new Wp.TableCellProperties(new Wp.TableCellWidth { Type = Wp.TableWidthUnitValues.Auto }));
+                    var para = CreateParagraph(new LayoutParagraph { Elements = cellElements });
+                    tc.Append(para);
+                    tr.Append(tc);
+                }
+                table.Append(tr);
+            }
+
+            return table;
         }
 
         private void InsertImageIntoDocx(MainDocumentPart mainPart, Wp.Body body, ImageElement img)
@@ -625,7 +778,7 @@ namespace ConvertHub.Api.Services.Implementation
             var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             var sheetData = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
             worksheetPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(sheetData);
-            var sheets = spreadsheet.WorkbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
+            var sheets = spreadsheet.WorkbookPart!.Workbook!.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
             sheets.Append(new DocumentFormat.OpenXml.Spreadsheet.Sheet { Id = spreadsheet.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" });
 
             using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
@@ -787,7 +940,7 @@ namespace ConvertHub.Api.Services.Implementation
             var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             var sheetData = new DocumentFormat.OpenXml.Spreadsheet.SheetData();
             worksheetPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(sheetData);
-            var sheets = spreadsheet.WorkbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
+            var sheets = spreadsheet.WorkbookPart!.Workbook!.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
             sheets.Append(new DocumentFormat.OpenXml.Spreadsheet.Sheet { Id = spreadsheet.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" });
             uint rowIdx = 1;
             foreach (var line in lines)
@@ -827,24 +980,82 @@ namespace ConvertHub.Api.Services.Implementation
             }
         }
 
-        private void SplitPdf(string src, string dstDir)
+        private void SplitPdf(string src, string dstZip)
         {
-            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
-            var name = Path.GetFileNameWithoutExtension(src);
-            for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempDir);
+            try
             {
-                var outPath = Path.Combine(dstDir, $"{name}_page_{i}.pdf");
-                using var outDoc = new iText.Kernel.Pdf.PdfDocument(new PdfWriter(outPath));
-                pdfDoc.CopyPagesTo(i, i, outDoc);
+                using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(new PdfReader(src));
+                var name = Path.GetFileNameWithoutExtension(src);
+                for (int i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+                {
+                    var outPath = Path.Combine(tempDir, $"{name}_page_{i}.pdf");
+                    using var outDoc = new iText.Kernel.Pdf.PdfDocument(new PdfWriter(outPath));
+                    pdfDoc.CopyPagesTo(i, i, outDoc);
+                }
+                System.IO.Compression.ZipFile.CreateFromDirectory(tempDir, dstZip);
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
             }
         }
 
-        private void CompressPdf(string src, string dst)
+        private void CompressPdf(string src, string dst, ConversionType type)
         {
-            var writerProps = new WriterProperties().SetFullCompressionMode(true).SetCompressionLevel(9);
-            using var reader = new PdfReader(src);
-            using var writer = new PdfWriter(dst, writerProps);
-            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader, writer);
+            string profile = type switch
+            {
+                ConversionType.CompressPdfLow => "/screen",   // 72 dpi
+                ConversionType.CompressPdfHigh => "/printer", // 300 dpi
+                _ => "/ebook"                                // 150 dpi (Medium)
+            };
+
+            _logger.LogInformation("[PDF COMPRESSION] Using Ghostscript Profile: {Profile}", profile);
+
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "gs",
+                    Arguments = $"-sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS={profile} -dNOPAUSE -dQUIET -dBATCH -sOutputFile=\"{dst}\" \"{src}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            if (OperatingSystem.IsWindows())
+            {
+                // Try common GS paths on Windows if not in PATH
+                var gsPath = @"C:\Program Files\gs\gs10.02.1\bin\gswin64c.exe";
+                if (File.Exists(gsPath)) process.StartInfo.FileName = gsPath;
+                else process.StartInfo.FileName = "gswin64c"; 
+            }
+
+            try
+            {
+                process.Start();
+                process.WaitForExit(120000);
+
+                if (File.Exists(dst))
+                {
+                    var oldSize = new FileInfo(src).Length;
+                    var newSize = new FileInfo(dst).Length;
+                    var reduction = oldSize > 0 ? (1.0 - (double)newSize / oldSize) * 100 : 0;
+                    _logger.LogInformation("[PDF COMPRESSION] Reduction: {Pct:F1}% ({Old} -> {New} bytes)", reduction, oldSize, newSize);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("[PDF COMPRESSION] Ghostscript failed, falling back to basic compression: {Msg}", ex.Message);
+                // Fallback to basic iText compression
+                var writerProps = new WriterProperties().SetFullCompressionMode(true).SetCompressionLevel(9);
+                using var reader = new PdfReader(src);
+                using var writer = new PdfWriter(dst, writerProps);
+                using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader, writer);
+            }
         }
     }
 }

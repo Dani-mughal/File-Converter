@@ -48,56 +48,84 @@ export const seoConfig = {
       steps: [
         'Select the folder or files you want to compress.',
         'Wait for our server to recursively package your files.',
-        'Download your secure ZIP archive.'
+        'Download your secure ZIP archive.']
+  },
+    'svg-to-png': {
+      title: 'SVG to PNG Converter - High Resolution Online | ConverterHub',
+      description: 'Convert SVG vector graphics to high-resolution PNG images instantly. Perfect for web design and standard image viewing. Transparent background preserved.',
+      h1: 'SVG to PNG Converter',
+      keywords: 'svg to png, convert svg to png high res, vector to png',
+      faq: [
+        {
+          q: 'Will the PNG have a transparent background?',
+          a: 'Yes, our converter maintains the transparency of your original SVG file.'
+        }
       ]
+    },
+    'merge-pdf': {
+      title: 'Merge PDF Online - Combine PDF Files Instantly | ConverterHub',
+      description: 'Combine multiple PDF documents into a single file in seconds. Simple, fast, and secure PDF merger for professional use.',
+      h1: 'Merge PDF Online',
+      keywords: 'merge pdf, combine pdf online, pdf joiner',
     }
-  }
+  },
 };
 
 /**
  * Helper to get SEO config for a tool ID, with fallback to generic generation.
  */
 export const getSeoConfig = (toolId) => {
-  if (seoConfig.tools[toolId]) {
-    return seoConfig.tools[toolId];
-  }
+  const defaults = seoConfig.default;
+  const tool = seoConfig.tools[toolId] || {};
 
   // Generic generator for tools not explicitly defined
   const parts = toolId.split('-to-');
+  let generated = {};
+  
   if (parts.length === 2) {
     const src = parts[0].toUpperCase();
     const tgt = parts[1].toUpperCase();
-    return {
-      title: `Convert ${src} to ${tgt} Online - Free & Fast | ConverterHub`,
-      description: `Easily convert ${src} files to ${tgt} format online for free. Fast, secure, and no installation required. Try our universal file converter today.`,
+    generated = {
+      title: `Convert ${src} to ${tgt} Online - Free & High Quality | ConverterHub`,
+      description: `Professional-grade ${src} to ${tgt} conversion online. Fastest ${src} file processing with maximum security. Convert your files to ${tgt} instantly.`,
+      keywords: `${src} to ${tgt}, convert ${src} to ${tgt}, free online converter, ${src} file converter`,
       h1: `Convert ${src} to ${tgt} Online`,
-      h2: `High-Quality ${src} to ${tgt} Conversion`,
+      h2: `Why use our ${src} to ${tgt} Converter?`,
       faq: [
         {
           q: `Is it safe to convert ${src} to ${tgt}?`,
-          a: `Yes, we prioritize your privacy. All files are encrypted during transfer and deleted automatically after 30 minutes.`
+          a: `Yes, we prioritize your privacy. All files are encrypted using SSL and deleted automatically after 30 minutes.`
+        },
+        {
+          q: `Can I convert large ${src} files?`,
+          a: `Yes, ConverterHub supports large file uploads up to 500MB depending on the format.`
         }
       ],
       steps: [
         `Upload your ${src} file.`,
-        `Wait for the system to process the conversion.`,
-        `Download your new ${tgt} file.`
+        `Wait for our high-speed engine to process the conversion.`,
+        `Download your high-fidelity ${tgt} file.`
       ]
     };
-  }
-
-  // Action-based generator (e.g. compress-pdf)
-  if (toolId.includes('-')) {
+  } else if (toolId.includes('-')) {
     const [action, format] = toolId.split('-');
     const capitalizedAction = action.charAt(0).toUpperCase() + action.slice(1);
     const capitalizedFormat = format.toUpperCase();
-    return {
-      title: `${capitalizedAction} ${capitalizedFormat} Online - Free Tool | ConverterHub`,
-      description: `Free online tool to ${action} ${capitalizedFormat} files. Fast, secure, and easy to use with no software installation.`,
+    generated = {
+      title: `${capitalizedAction} ${capitalizedFormat} Online - Free & Fast | ConverterHub`,
+      description: `Need to ${action} ${capitalizedFormat} files? Use our free online tool to ${action} ${capitalizedFormat} efficiently and securely.`,
+      keywords: `${action} ${format}, free ${action} ${format}, online ${format} tool`,
       h1: `${capitalizedAction} ${capitalizedFormat} Online`,
-      h2: `Professional ${capitalizedFormat} ${capitalizedAction} Tool`,
+      h2: `Professional ${capitalizedFormat} ${capitalizedAction} Utility`,
     };
   }
 
-  return seoConfig.default;
+  // Merge: Priority = Manual Tool Config > Generated > Defaults
+  return {
+    ...defaults,
+    ...generated,
+    ...tool,
+    url: `https://converterhub.tech/${toolId}`,
+    image: `https://converterhub.tech/og/${toolId || 'default'}.jpg`,
+  };
 };

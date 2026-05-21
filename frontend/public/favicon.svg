@@ -1,12 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="128" fill="url(#grad1)"/>
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#a855f7"/>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#3730A3" />
     </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="20" />
+      <feOffset dx="0" dy="15" result="offsetblur" />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.4" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#g)"/>
-  <path d="M20 18h14l10 10v18a2 2 0 0 1-2 2H20a2 2 0 0 1-2-2V20a2 2 0 0 1 2-2z" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
-  <polyline points="34,18 34,28 44,28" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M28 34l4 4 4-4M32 38V30" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g filter="url(#shadow)">
+    <!-- Layered File Icon -->
+    <rect x="140" y="160" width="180" height="240" rx="20" fill="white" fill-opacity="0.1" stroke="white" stroke-width="12" />
+    <rect x="200" y="120" width="180" height="240" rx="20" fill="white" fill-opacity="0.2" stroke="white" stroke-width="12" />
+    
+    <!-- Sophisticated Exchange Icon -->
+    <path d="M240 230H340M340 230L310 200M340 230L310 260" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M280 290H180M180 290L210 260M180 290L210 320" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
 </svg>

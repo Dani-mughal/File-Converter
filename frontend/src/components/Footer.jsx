@@ -41,12 +41,23 @@ export default function Footer() {
       ]
     },
     {
-      title: 'Other Tools',
+      title: 'Media Tools',
       links: [
-        { label: 'Video to GIF', href: '/video-to-gif' },
         { label: 'MP4 to MP3', href: '/mp4-to-mp3' },
-        { label: 'EPUB to PDF', href: '/epub-to-pdf' },
+        { label: 'Video to GIF', href: '/video-to-gif' },
+        { label: 'MOV to MP4', href: '/mov-to-mp4' },
+        { label: 'MKV to MP4', href: '/mkv-to-mp4' },
+        { label: 'AVI to MP4', href: '/avi-to-mp4' },
+      ]
+    },
+    {
+      title: 'Data Tools',
+      links: [
         { label: 'JSON to CSV', href: '/json-to-csv' },
+        { label: 'CSV to JSON', href: '/csv-to-json' },
+        { label: 'Excel to JSON', href: '/xlsx-to-json' },
+        { label: 'XML to JSON', href: '/xml-to-json' },
+        { label: 'Markdown to HTML', href: '/markdown-to-html' },
       ]
     },
     {

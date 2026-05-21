@@ -197,12 +197,18 @@ namespace ConvertHub.Api.Services.Implementation
                         case ConversionType.XlsxToCsv:
                             {
                                 using var workbook = new XLWorkbook(sourcePath);
-                                var worksheet = workbook.Worksheets.First();
+                                var worksheet = workbook.Worksheets.FirstOrDefault();
+                                if (worksheet == null) return;
+
                                 using var writer = new StreamWriter(destPath);
                                 using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
-                                var lastRow = worksheet.LastRowUsed().RowNumber();
-                                var lastCol = worksheet.LastColumnUsed().ColumnNumber();
+                                var lastRowUsed = worksheet.LastRowUsed();
+                                var lastColUsed = worksheet.LastColumnUsed();
+                                if (lastRowUsed == null || lastColUsed == null) return;
+
+                                var lastRow = lastRowUsed.RowNumber();
+                                var lastCol = lastColUsed.ColumnNumber();
 
                                 for (int r = 1; r <= lastRow; r++)
                                 {
@@ -219,12 +225,18 @@ namespace ConvertHub.Api.Services.Implementation
                         case ConversionType.XlsxToJson:
                             {
                                 using var workbook = new XLWorkbook(sourcePath);
-                                var worksheet = workbook.Worksheets.First();
+                                var worksheet = workbook.Worksheets.FirstOrDefault();
+                                if (worksheet == null) return;
+
                                 var list = new List<Dictionary<string, string>>();
                                 var headers = new List<string>();
 
-                                var lastRow = worksheet.LastRowUsed().RowNumber();
-                                var lastCol = worksheet.LastColumnUsed().ColumnNumber();
+                                var lastRowUsed = worksheet.LastRowUsed();
+                                var lastColUsed = worksheet.LastColumnUsed();
+                                if (lastRowUsed == null || lastColUsed == null) return;
+
+                                var lastRow = lastRowUsed.RowNumber();
+                                var lastCol = lastColUsed.ColumnNumber();
 
                                 for (int c = 1; c <= lastCol; c++) headers.Add(worksheet.Cell(1, c).Value.ToString());
 

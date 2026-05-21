@@ -11,11 +11,15 @@ import {
   HiOutlineLockClosed,
   HiOutlineArrowPathRoundedSquare,
   HiOutlineQueueList,
-  HiOutlineArchiveBox
+  HiOutlineArchiveBox,
+  HiOutlinePlay
 } from 'react-icons/hi2';
 import { FileStack } from 'lucide-react';
 import ConversionGrid from '../components/ConversionGrid';
-import AdBanner from '../components/AdBanner';
+import TutorialModal from '../components/TutorialModal';
+import { trackEvent } from '../components/AnalyticsTracker';
+import SEO from '../components/SEO';
+import { getSeoConfig } from '../config/seoConfig';
 
 
 const FEATURES = [
@@ -50,10 +54,10 @@ const FEATURES = [
     icon: HiOutlineQueueList,
     title: 'Batch Conversion',
     description: 'Upload and convert multiple files simultaneously with ease.',
-    color: 'from-purple-400 to-indigo-500',
-    bgLight: 'bg-purple-50',
-    bgDark: 'bg-purple-500/10',
-    textColor: 'text-purple-500',
+    color: 'from-primary-400 to-blue-600',
+    bgLight: 'bg-primary-50',
+    bgDark: 'bg-primary-500/10',
+    textColor: 'text-primary-500',
   },
   {
     icon: HiOutlineArchiveBox,
@@ -97,6 +101,7 @@ export default function HomePage() {
   const { darkMode } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const gridRef = useRef(null);
 
   const handleSearch = () => {
@@ -110,48 +115,25 @@ export default function HomePage() {
     if (e.key === 'Enter') handleSearch();
   };
 
+  const openTutorial = () => {
+    setIsTutorialOpen(true);
+    trackEvent('tutorial_opened', { source: 'hero_button' });
+  };
+
+  const seo = getSeoConfig(''); // Default config
+
   return (
     <div className="min-h-screen">
-      <Helmet>
-        <title>{seoConfig.default.title}</title>
-        <meta name="description" content={seoConfig.default.description} />
-        <link rel="canonical" href={window.location.origin} />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebApplication",
-            "name": "ConverterHub",
-            "url": window.location.origin,
-            "description": seoConfig.default.description,
-            "applicationCategory": "Utility",
-            "operatingSystem": "All",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
-            },
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "1250"
-            },
-            "featureList": [
-              "Batch file conversion",
-              "PDF to Word OCR",
-              "Video to MP3 extraction",
-              "Secure file deletion after 30 mins"
-            ]
-          })}
-        </script>
-      </Helmet>
-
+      <SEO config={seo} />
+      
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-32 pb-24 sm:pt-48 sm:pb-36">
         <div className="absolute inset-0 pointer-events-none">
-          <div className={`absolute top-0 left-0 w-full h-full opacity-30 ${darkMode ? 'bg-[radial-gradient(circle_at_top_right,#4f46e5_0%,transparent_50%)]' : 'bg-[radial-gradient(circle_at_top_right,#e0e7ff_0%,transparent_50%)]'}`} />
+          <div className={`absolute top-0 left-0 w-full h-full opacity-30 ${darkMode ? 'bg-[radial-gradient(circle_at_top_right,#2563eb_0%,transparent_50%)]' : 'bg-[radial-gradient(circle_at_top_right,#dbeafe_0%,transparent_50%)]'}`} />
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-[120px] animate-float" />
           <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-accent-500/10 rounded-full blur-[100px] animate-float-delay" />
         </div>
+
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
@@ -249,6 +231,18 @@ export default function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </Link>
+            <button
+              onClick={openTutorial}
+              id="hero-tutorial-btn"
+              className={`flex items-center gap-3 px-10 py-5 font-bold rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${
+                darkMode 
+                  ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' 
+                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
+              }`}
+            >
+              <HiOutlinePlay className={`w-5 h-5 ${darkMode ? 'text-primary-400' : 'text-primary-600'}`} />
+              How it works
+            </button>
             <div className="flex flex-col items-start gap-1">
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map(i => (
@@ -257,8 +251,10 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              <span className={`text-sm font-semibold ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                Joined by 10k+ today
+              <span className={`text-sm font-semibold flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                <span>Trusted by 10,000+ users</span>
+                <span className="hidden sm:inline text-slate-300 dark:text-slate-600">•</span>
+                <span className="flex items-center gap-1"><span className="text-amber-400 text-lg">★★★★★</span> 4.9/5</span>
               </span>
             </div>
           </motion.div>
@@ -289,6 +285,30 @@ export default function HomePage() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className={`py-12 ${darkMode ? 'bg-slate-900/30' : 'bg-slate-100/50'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className={`text-3xl font-black mb-8 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Loved by our Users</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-800 border-white/5' : 'bg-white border-slate-200'} shadow-sm text-left`}>
+              <div className="text-amber-400 text-xl mb-3">★★★★★</div>
+              <p className={`italic mb-4 text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>"Fast and accurate PDF conversion."</p>
+              <div className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-slate-900'}`}>— Sarah K.</div>
+            </div>
+            <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-800 border-white/5' : 'bg-white border-slate-200'} shadow-sm text-left`}>
+              <div className="text-amber-400 text-xl mb-3">★★★★★</div>
+              <p className={`italic mb-4 text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>"Best free converter I found online."</p>
+              <div className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-slate-900'}`}>— David R.</div>
+            </div>
+            <div className={`p-6 rounded-2xl border ${darkMode ? 'bg-slate-800 border-white/5' : 'bg-white border-slate-200'} shadow-sm text-left`}>
+              <div className="text-amber-400 text-xl mb-3">★★★★★</div>
+              <p className={`italic mb-4 text-sm ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>"SVG conversion quality is excellent."</p>
+              <div className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-slate-900'}`}>— Ali M.</div>
+            </div>
           </div>
         </div>
       </section>
@@ -381,6 +401,8 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      <TutorialModal isOpen={isTutorialOpen} onClose={() => setIsTutorialOpen(false)} />
     </div>
   );
 }

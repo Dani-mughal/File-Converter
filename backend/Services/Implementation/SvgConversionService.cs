@@ -155,20 +155,22 @@ namespace ConvertHub.Api.Services.Implementation
 
         private async Task ConvertToPdfAsync(SKSvg svg, string destPath, float width, float height)
         {
-            var pdfSw = Stopwatch.StartNew();
-            
-            // 6. PDF optimization - Direct vector embedding
-            using var stream = File.OpenWrite(destPath);
-            using var document = SKDocument.CreatePdf(stream);
-            
-            // Auto-fit page dimensions to SVG content
-            using var canvas = document.BeginPage(width, height);
-            canvas.DrawPicture(svg.Picture);
-            document.EndPage();
-            document.Close();
+            await Task.Run(() => {
+                var pdfSw = Stopwatch.StartNew();
+                
+                // 6. PDF optimization - Direct vector embedding
+                using var stream = File.OpenWrite(destPath);
+                using var document = SKDocument.CreatePdf(stream);
+                
+                // Auto-fit page dimensions to SVG content
+                using var canvas = document.BeginPage(width, height);
+                canvas.DrawPicture(svg.Picture);
+                document.EndPage();
+                document.Close();
 
-            pdfSw.Stop();
-            _logger.LogInformation("[SVG PERFORMANCE] PDF Generation time: {Ms}ms", pdfSw.ElapsedMilliseconds);
+                pdfSw.Stop();
+                _logger.LogInformation("[SVG PERFORMANCE] PDF Generation time: {Ms}ms", pdfSw.ElapsedMilliseconds);
+            });
         }
     }
 }

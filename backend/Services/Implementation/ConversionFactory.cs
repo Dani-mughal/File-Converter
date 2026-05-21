@@ -192,7 +192,8 @@ namespace ConvertHub.Api.Services.Implementation
                 or ConversionType.XlsToCsv or ConversionType.XlsxToCsv or ConversionType.XlsToPdf 
                 or ConversionType.XlsxToPdf or ConversionType.XlsToJson or ConversionType.XlsxToJson 
                 or ConversionType.ExcelToPdf or ConversionType.MergePdf or ConversionType.SplitPdf 
-                or ConversionType.CompressPdf or ConversionType.EpubToPdf
+                or ConversionType.CompressPdf or ConversionType.CompressPdfLow or ConversionType.CompressPdfMed 
+                or ConversionType.CompressPdfHigh or ConversionType.EpubToPdf
                     => _serviceProvider.GetRequiredService<PdfConversionService>(),
 
                 // 🖼️ Images & Vector
