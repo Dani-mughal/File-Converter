@@ -37,6 +37,12 @@ namespace ConvertHub.Api.Services.Implementation
             return filePath;
         }
 
+        public async Task<string[]> SaveFilesAsync(IEnumerable<IFormFile> files)
+        {
+            var tasks = files.Select(f => SaveFileAsync(f));
+            return await Task.WhenAll(tasks);
+        }
+
         public void DeleteFile(string filePath)
         {
             if (File.Exists(filePath))

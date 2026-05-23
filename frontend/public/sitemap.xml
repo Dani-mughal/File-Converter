@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Core Pages -->
+  <url><loc>https://converterhub.tech/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://converterhub.tech/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://converterhub.tech/contact</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://converterhub.tech/convert</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/blog</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/privacy</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://converterhub.tech/terms</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://converterhub.tech/dmca</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://converterhub.tech/disclaimer</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+
+  <!-- Blog Posts -->
+  <url><loc>https://converterhub.tech/blog/pdf-vs-docx-comparison</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://converterhub.tech/blog/image-compression-guide</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://converterhub.tech/blog/protecting-digital-privacy</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- PDF Tools -->
+  <url><loc>https://converterhub.tech/pdf-to-docx</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/pdf-to-xlsx</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/pdf-to-jpg</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/pdf-to-html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/docx-to-pdf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/xlsx-to-pdf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/pptx-to-pdf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/merge-pdf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/split-pdf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/compress-pdf-high</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/image-to-pdf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+
+  <!-- Image Tools -->
+  <url><loc>https://converterhub.tech/jpg-to-png</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/png-to-jpg</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/webp-to-png</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/webp-to-jpg</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/svg-to-png</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/svg-to-jpg</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/svg-to-pdf</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/heic-to-jpg</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/heic-to-png</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/png-to-svg</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+
+  <!-- Media Tools -->
+  <url><loc>https://converterhub.tech/mp4-to-mp3</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/video-to-gif</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/mov-to-mp4</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/mkv-to-mp4</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/avi-to-mp4</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/wav-to-mp3</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/mp3-to-wav</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/mp4-to-gif</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+
+  <!-- Archive & Data Tools -->
+  <url><loc>https://converterhub.tech/zip-folder</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/zip-file</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/unzip</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/xlsx-to-csv</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/csv-to-json</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/json-to-csv</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/xml-to-json</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/json-to-xml</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/markdown-to-html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://converterhub.tech/json-to-yaml</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+</urlset>

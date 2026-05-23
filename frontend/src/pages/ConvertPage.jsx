@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 import { useFileHistory } from '../hooks/useFileHistory';
-import { uploadFile, startConversion, getJobStatus, downloadJobResult, getOutputExtension } from '../services/api';
+import { uploadFiles, startConversion, getJobStatus, downloadJobResult, getOutputExtension } from '../services/api';
 import { getSeoConfig } from '../config/seoConfig';
 import FileUpload from '../components/FileUpload';
 import ConversionSelector from '../components/ConversionSelector';
@@ -13,8 +13,17 @@ import ProgressBar from '../components/ProgressBar';
 import ResultDownload from '../components/ResultDownload';
 import FileHistoryPanel from '../components/FileHistoryPanel';
 import SecurityFeatures from '../components/SecurityFeatures';
-import AdBanner from '../components/AdBanner';
-import { HiOutlineQuestionMarkCircle, HiOutlineListBullet } from 'react-icons/hi2';
+import { getRelatedTools } from '../config/toolsConfig';
+import { Link } from 'react-router-dom';
+import { HiOutlineArrowRight } from 'react-icons/hi2';
+import { HiOutlineQuestionMarkCircle, HiOutlineListBullet, HiOutlineMagnifyingGlass, HiOutlinePlay } from 'react-icons/hi2';
+import { CATEGORIES, getCategoryByToolId } from '../config/toolsConfig';
+import RatingPopup from '../components/RatingPopup';
+import { trackEvent } from '../components/AnalyticsTracker';
+import TutorialModal from '../components/TutorialModal';
+import TutorialVideo from '../components/TutorialVideo';
+import SEO from '../components/SEO';
+import Breadcrumbs from '../components/Breadcrumbs';
 
 const STEPS = {
   UPLOAD: 'upload',
@@ -41,12 +50,18 @@ export default function ConvertPage() {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [outputFileName, setOutputFileName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [manualSearchQuery, setManualSearchQuery] = useState('');
+  const [showAllTools, setShowAllTools] = useState(false);
+  const [showRating, setShowRating] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
   const pollIntervalRef = useRef(null);
 
   // Synchronize conversionType with URL toolId
   useEffect(() => {
     if (toolId) {
+      // If toolId is like 'pdf-to-docx', we want to set conversionType to 'pdf-to-docx'
+      // but also ensure the selector highlights 'docx'
       setConversionType(toolId);
     }
   }, [toolId]);
@@ -71,13 +86,17 @@ export default function ConvertPage() {
     setStep(STEPS.CONVERTING);
     setProgress(0);
     setErrorMessage('');
+    setShowRating(false);
+    trackEvent('conversion_started', { type: conversionType });
 
     try {
-      const file = files[0];
-      const uploadRes = await uploadFile(file, (pct) => setProgress(Math.round(pct * 0.3)));
+      const uploadRes = await uploadFiles(files, (pct) => setProgress(Math.round(pct * 0.3)));
+      const filePaths = uploadRes.filePaths || (uploadRes.filePath ? [uploadRes.filePath] : []);
 
       const targetFormat = conversionType.includes('-to-') ? conversionType.split('-to-')[1] : conversionType;
-      const jobId = await startConversion(uploadRes.filePath, targetFormat, file.name);
+      const primaryFileName = files[0].name;
+      
+      const jobId = await startConversion(filePaths, targetFormat, primaryFileName);
       
       setProgress(40);
 
@@ -92,17 +111,19 @@ export default function ConvertPage() {
             const url = URL.createObjectURL(blob);
             
             const ext = getOutputExtension(targetFormat);
-            const outName = `${file.name.replace(/\.[^.]+$/, '')}-converted${ext}`;
+            const outName = `${primaryFileName.replace(/\.[^.]+$/, '')}-converted${ext}`;
             
             setDownloadUrl(url);
             setOutputFileName(outName);
             setStep(STEPS.DONE);
             setProgress(100);
+            setShowRating(true);
             toast.success('Conversion successful!');
+            trackEvent('conversion_success', { type: conversionType });
             
             addEntry({
-              fileName: file.name,
-              fileSize: file.size,
+              fileName: primaryFileName,
+              fileSize: files.reduce((acc, f) => acc + f.size, 0),
               conversionType,
               status: 'success',
             });
@@ -127,6 +148,7 @@ export default function ConvertPage() {
     setErrorMessage(msg);
     setStep(STEPS.ERROR);
     toast.error(msg);
+    trackEvent('conversion_failed', { type: conversionType, error: msg });
     addEntry({
       fileName: files[0]?.name || 'Unknown',
       fileSize: files[0]?.size || 0,
@@ -174,26 +196,34 @@ export default function ConvertPage() {
 
   return (
     <div className={`min-h-screen pt-24 pb-16 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-      <Helmet>
-        <title>{seo.title}</title>
-        <meta name="description" content={seo.description} />
-        <script type="application/ld+json">
-          {JSON.stringify(schemaMarkup)}
-        </script>
-      </Helmet>
+      <SEO config={seo} />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto">
+      {/* Hero / Tool Title */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <Breadcrumbs toolId={currentToolId} toolName={seo.h1} darkMode={darkMode} />
+        <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight">{seo.h1.split(' ')[0]} <span className="gradient-text">{seo.h1.split(' ').slice(1).join(' ')}</span></h1>
             <p className={`mt-4 text-lg ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>Fast, secure, and entirely online. No installation required.</p>
+            
+            <div className="mt-6 flex justify-center">
+              <button 
+                onClick={() => { setIsTutorialOpen(true); trackEvent('tutorial_opened', { source: 'convert_page_hero' }); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                  darkMode ? 'bg-white/5 text-slate-300 hover:bg-white/10' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-sm'
+                }`}
+              >
+                <HiOutlinePlay className="w-4 h-4 text-primary-500" />
+                How to use {seo.h1.split(' ').slice(1, 3).join(' ')}?
+              </button>
+            </div>
           </motion.div>
 
           <div className="space-y-6">
             <AnimatePresence mode="wait">
               {step === STEPS.UPLOAD && (
                 <motion.div key="upload-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-                  <FileUpload files={files} onFilesChange={setFiles} error={fileError} onError={setFileError} />
+                  <FileUpload files={files} onFilesChange={setFiles} error={fileError} onError={setFileError} toolId={conversionType} />
                   <ConversionSelector selected={conversionType} onSelect={setConversionType} files={files} />
                   <button
                     onClick={handleConvert}
@@ -204,13 +234,79 @@ export default function ConvertPage() {
                   >
                     {files.length === 0 ? 'Upload files to begin' : !conversionType ? 'Select a format' : 'Convert Now'}
                   </button>
+
+                  {/* Manual Search Section */}
+                  <div className={`mt-8 p-6 rounded-2xl border ${darkMode ? 'bg-slate-900/50 border-white/5' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className={`text-sm font-bold flex items-center gap-2 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                        <HiOutlineMagnifyingGlass className="w-4 h-4" />
+                        Find Other Formats
+                      </h3>
+                      <button 
+                        onClick={() => setShowAllTools(!showAllTools)}
+                        className="text-[10px] font-black uppercase tracking-widest text-primary-500 hover:underline"
+                      >
+                        {showAllTools ? 'Hide Search' : 'Search All Tools'}
+                      </button>
+                    </div>
+
+                    <AnimatePresence>
+                      {showAllTools && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-4 overflow-hidden"
+                        >
+                          <div className={`flex items-center px-3 py-2 rounded-lg border ${darkMode ? 'bg-slate-800 border-white/10' : 'bg-white border-slate-200'}`}>
+                            <HiOutlineMagnifyingGlass className="w-4 h-4 text-slate-500 mr-2" />
+                            <input 
+                              type="text" 
+                              placeholder="Search format (e.g. PDF to Word)"
+                              value={manualSearchQuery}
+                              onChange={(e) => setManualSearchQuery(e.target.value)}
+                              className="bg-transparent border-none focus:ring-0 text-sm w-full outline-none"
+                            />
+                          </div>
+
+                          <div className="max-h-[200px] overflow-y-auto custom-scrollbar pr-2 space-y-1">
+                            {CATEGORIES.flatMap(cat => cat.links)
+                              .filter(link => 
+                                link.label.toLowerCase().includes(manualSearchQuery.toLowerCase()) ||
+                                link.id.toLowerCase().includes(manualSearchQuery.toLowerCase())
+                              )
+                              .map(link => (
+                                <button
+                                  key={link.id}
+                                  onClick={() => {
+                                    setConversionType(link.id);
+                                    setManualSearchQuery('');
+                                    setShowAllTools(false);
+                                    toast.success(`Selected: ${link.label}`);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${
+                                    conversionType === link.id
+                                      ? 'bg-primary-600 text-white'
+                                      : darkMode ? 'hover:bg-white/5 text-slate-400' : 'hover:bg-white text-slate-600'
+                                  }`}
+                                >
+                                  {link.label}
+                                </button>
+                              ))
+                            }
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
                   <SecurityFeatures />
                 </motion.div>
               )}
 
               {step === STEPS.CONVERTING && (
                 <motion.div key="converting-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <ProgressBar progress={progress} status={progress < 100 ? 'converting' : 'done'} />
+                  <ProgressBar progress={progress} status={progress < 100 ? 'converting' : 'done'} onRetry={handleConvert} />
                 </motion.div>
               )}
 
@@ -287,7 +383,46 @@ export default function ConvertPage() {
             everything is automatically deleted 30 minutes after conversion to ensure your privacy.
           </p>
         </div>
+
+        <TutorialVideo title={`How to Convert ${seo.h1.split(' ').slice(1, 3).join(' ')}`} />
+
+        {/* Related Tools Section */}
+        <div className="mt-24 border-t border-slate-200 dark:border-slate-800 pt-16">
+          <h2 className={`text-3xl font-black mb-10 text-center ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            Explore More Conversion Tools
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {getRelatedTools(currentToolId).map((tool) => (
+              <Link
+                key={tool.id}
+                to={`/${tool.id}`}
+                className={`group p-8 rounded-[2rem] border transition-all duration-300 flex items-center justify-between ${
+                  darkMode 
+                    ? 'bg-slate-900/40 border-white/5 hover:border-primary-500/30 hover:bg-slate-900/60' 
+                    : 'bg-white border-slate-100 hover:border-primary-200 hover:shadow-xl'
+                }`}
+              >
+                <div>
+                  <h3 className={`font-bold mb-1 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                    {tool.label}
+                  </h3>
+                  <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Free online conversion
+                  </p>
+                </div>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  darkMode ? 'bg-white/5 text-slate-400 group-hover:text-primary-400' : 'bg-slate-50 text-slate-400 group-hover:text-primary-600'
+                }`}>
+                  <HiOutlineArrowRight className="w-5 h-5" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
+      
+      {showRating && <RatingPopup conversionType={conversionType} onClose={() => setShowRating(false)} />}
+      <TutorialModal isOpen={isTutorialOpen} onClose={() => setIsTutorialOpen(false)} />
     </div>
   );
 }

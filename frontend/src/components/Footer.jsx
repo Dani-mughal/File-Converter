@@ -6,6 +6,7 @@ import {
   HiOutlineLockClosed, 
   HiOutlineCloudArrowUp 
 } from 'react-icons/hi2';
+import { FileStack } from 'lucide-react';
 import { 
   FaTwitter, 
   FaGithub, 
@@ -40,12 +41,33 @@ export default function Footer() {
       ]
     },
     {
-      title: 'Other Tools',
+      title: 'Media Tools',
       links: [
-        { label: 'Video to GIF', href: '/video-to-gif' },
         { label: 'MP4 to MP3', href: '/mp4-to-mp3' },
-        { label: 'EPUB to PDF', href: '/epub-to-pdf' },
+        { label: 'Video to GIF', href: '/video-to-gif' },
+        { label: 'MOV to MP4', href: '/mov-to-mp4' },
+        { label: 'MKV to MP4', href: '/mkv-to-mp4' },
+        { label: 'AVI to MP4', href: '/avi-to-mp4' },
+      ]
+    },
+    {
+      title: 'Data Tools',
+      links: [
         { label: 'JSON to CSV', href: '/json-to-csv' },
+        { label: 'CSV to JSON', href: '/csv-to-json' },
+        { label: 'Excel to JSON', href: '/xlsx-to-json' },
+        { label: 'XML to JSON', href: '/xml-to-json' },
+        { label: 'Markdown to HTML', href: '/markdown-to-html' },
+      ]
+    },
+    {
+      title: 'Resources',
+      links: [
+        { label: 'Resource Hub', href: '/blog' },
+        { label: 'PDF Guides', href: '/blog/pdf-vs-docx-comparison' },
+        { label: 'Image Secrets', href: '/blog/image-compression-guide' },
+        { label: 'Security Brief', href: '/blog/protecting-digital-privacy' },
+        { label: 'Trust & Safety', href: '/privacy' },
       ]
     },
     {
@@ -54,6 +76,7 @@ export default function Footer() {
         { label: 'About Us', href: '/about' },
         { label: 'Privacy Policy', href: '/privacy' },
         { label: 'Terms of Service', href: '/terms' },
+        { label: 'DMCA Policy', href: '/dmca' },
         { label: 'Contact Support', href: '/contact' },
       ]
     }
@@ -79,13 +102,11 @@ export default function Footer() {
           {/* Brand & Mission */}
           <div className="col-span-2">
             <div className="flex items-center gap-2.5 mb-6">
-              <div className="w-9 h-9 rounded-xl gradient-bg flex items-center justify-center shadow-lg shadow-primary-500/20">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
+              <div className="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center shadow-lg shadow-primary-500/20">
+                <FileStack className="w-6 h-6 text-white" strokeWidth={2.5} />
               </div>
               <span className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                ConvertHub
+                ConverterHub
               </span>
             </div>
             <p className={`text-sm leading-relaxed mb-6 max-w-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -163,9 +184,12 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-            &copy; {currentYear} ConvertHub. All rights reserved.
-          </p>
+          <div className="flex items-center gap-6">
+            <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+              &copy; {currentYear} ConverterHub. All rights reserved.
+            </p>
+            <a href="/sitemap.xml" className="text-[10px] text-slate-500 hover:text-primary-500 uppercase tracking-widest font-bold">Sitemap</a>
+          </div>
           <div className="flex items-center gap-2 text-xs font-medium">
             <span className={darkMode ? 'text-slate-500' : 'text-slate-400'}>Distributed by</span>
             <span className="gradient-text font-bold">Dani Mughal</span>

@@ -1,8 +1,21 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { HiOutlineArrowPath } from 'react-icons/hi2';
 
-export default function ProgressBar({ progress, status }) {
+export default function ProgressBar({ progress, status, onRetry }) {
   const { darkMode } = useTheme();
+  const [startTime] = useState(Date.now());
+  const [estimatedTime, setEstimatedTime] = useState(null);
+
+  useEffect(() => {
+    if (progress > 5 && progress < 100) {
+      const elapsed = Date.now() - startTime;
+      const totalEstimated = elapsed / (progress / 100);
+      const remaining = Math.round((totalEstimated - elapsed) / 1000);
+      setEstimatedTime(remaining > 0 ? remaining : 1);
+    }
+  }, [progress, startTime]);
 
   const statusLabels = {
     uploading: 'Uploading file...',
@@ -78,7 +91,7 @@ export default function ProgressBar({ progress, status }) {
         <div className="mt-4">
           <div className="flex items-center justify-between mb-2">
             <span className={`text-xs font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              Progress
+              {estimatedTime ? `Estimated remaining: ${estimatedTime}s` : 'Calculating...'}
             </span>
             <span className={`text-xs font-bold ${darkMode ? 'text-white' : 'text-slate-700'}`}>
               {Math.min(progress, 100)}%
@@ -103,6 +116,16 @@ export default function ProgressBar({ progress, status }) {
             </motion.div>
           </div>
         </div>
+      )}
+
+      {isError && onRetry && (
+        <button
+          onClick={onRetry}
+          className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+        >
+          <HiOutlineArrowPath className="w-5 h-5" />
+          Retry Conversion
+        </button>
       )}
     </motion.div>
   );

@@ -16,22 +16,22 @@ const VALUES = [
   {
     icon: HiOutlineBolt,
     title: 'Speed First',
-    text: 'We leverage global edge servers to ensure your files are processed in the blink of an eye.'
+    text: 'We leverage global cloud architecture to ensure that fast processing actually means instant results.'
   },
   {
     icon: HiOutlineShieldCheck,
     title: 'Privacy Guaranteed',
-    text: 'Your data is yours. We use bank-grade encryption and automatic deletion protocols.'
+    text: 'We believe privacy is a right. Our 30-minute auto-shredding protocol is our core promise to you.'
   },
   {
     icon: HiOutlineGlobeAlt,
     title: 'Universal Access',
-    text: 'Supporting 1000+ file combinations across every major platform and device.'
+    text: 'Providing 1000+ file combinations free of charge, ensuring digital tools are accessible to all.'
   },
   {
     icon: HiOutlineUserGroup,
-    title: 'Distributed by',
-    text: 'Proudly managed and distributed by Dani Mughal, dedicated to creating premium web tools.'
+    title: 'Expert Engineering',
+    text: 'Built and managed by Dani Mughal, dedicated to creating premium, privacy-first web utilities.'
   }
 ];
 
@@ -53,7 +53,7 @@ export default function AboutPage() {
               Simplifying <span className="gradient-text">File Freedom</span> for Everyone.
             </h1>
             <p className={`text-xl leading-relaxed mb-10 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              ConvertHub was founded on a simple premise: file formats should never stand in the way of productivity. 
+              ConverterHub was founded on a simple premise: file formats should never stand in the way of productivity. 
               We've built the world's most versatile cloud conversion engine to help millions of users bridge the gap 
               between different digital worlds.
             </p>
@@ -68,10 +68,20 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 mb-12">
               <a href="https://github.com/Dani-mughal" target="_blank" rel="noopener noreferrer" className="p-4 rounded-2xl bg-slate-900 text-white hover:scale-110 transition-all shadow-lg"><FaGithub className="w-6 h-6" /></a>
               <a href="https://www.linkedin.com/in/muhammad-adnan-arif-7b5a65320/" target="_blank" rel="noopener noreferrer" className="p-4 rounded-2xl bg-[#0077b5] text-white hover:scale-110 transition-all shadow-lg"><FaLinkedin className="w-6 h-6" /></a>
               <a href="https://www.facebook.com/muhammadadnan.arif.923" target="_blank" rel="noopener noreferrer" className="p-4 rounded-2xl bg-[#1877f2] text-white hover:scale-110 transition-all shadow-lg"><FaFacebook className="w-6 h-6" /></a>
+            </div>
+
+            <div className={`p-8 rounded-[2rem] border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'} relative overflow-hidden`}>
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold mb-4">A Note From Our Founder</h3>
+                <p className={`text-sm italic leading-relaxed ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  "I started ConverterHub.tech because I was tired of cluttered, ad-heavy conversion sites that compromised user data. My goal is to provide a clean, professional, and entirely private alternative that professionals and students can trust for their most sensitive documents. We aren't just a script; we're a project built on the principle of digital freedom and uncompromising quality."
+                </p>
+                <div className="mt-4 font-bold text-primary-500">— Dani Mughal, Lead Developer & Founder</div>
+              </div>
             </div>
           </motion.div>
           

@@ -12,6 +12,7 @@ namespace ConvertHub.Api.Models
         DocToPdf, DocxToPdf, DocToTxt, DocToHtml, DocToOdt, DocToRtf,
         TxtToPdf, TxtToDocx, TxtToHtml, TxtToEpub,
         PptToPdf, PptxToPdf, PptToJpg, PptToPng, PptToMp4,
+        MergePdf, SplitPdf, CompressPdf, CompressPdfLow, CompressPdfMed, CompressPdfHigh,
         XlsToCsv, XlsxToCsv, XlsToPdf, XlsxToPdf, XlsToJson, XlsxToJson,
         CsvToXlsx, CsvToJson, JsonToCsv, JsonToXml, XmlToJson,
 

@@ -1,14 +1,10 @@
 using ConvertHub.Api.Models;
 using ConvertHub.Api.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
+using System;
 
 namespace ConvertHub.Api.Services.Implementation
 {
-    /// <summary>
-    /// Routes each ConversionType to the correct service via an explicit dictionary.
-    /// No fragile string-contains matching.
-    /// </summary>
     public class ConversionFactory : IConversionFactory
     {
         private readonly IServiceProvider _serviceProvider;
@@ -52,8 +48,14 @@ namespace ConvertHub.Api.Services.Implementation
             { ConversionType.CsvToXlsx,         "pdf" },
             { ConversionType.ExcelToPdf,        "pdf" },
             { ConversionType.EpubToPdf,         "pdf" },
-            { ConversionType.HeicToPdf,         "pdf" },
             { ConversionType.JpgToPdf,          "pdf" },
+            { ConversionType.PngToPdf,          "pdf" },
+            { ConversionType.HeicToPdf,         "pdf" },
+            { ConversionType.TiffToPdf,         "pdf" },
+            { ConversionType.SvgToPdf,          "pdf" },
+            { ConversionType.AiToPdf,           "pdf" },
+            { ConversionType.EpsToPdf,          "pdf" },
+            { ConversionType.PsdToPdf,          "pdf" },
             { ConversionType.ImageToPdf,        "pdf" },
             { ConversionType.DocumentToPdf,     "pdf" },
             { ConversionType.HtmlToPdf,         "pdf" },
@@ -77,7 +79,7 @@ namespace ConvertHub.Api.Services.Implementation
             { ConversionType.JpgToGif,          "image" },
             { ConversionType.GifToJpg,          "image" },
             { ConversionType.PngToSvg,          "image" },
-            { ConversionType.SvgToPng,          "image" },
+            { ConversionType.SvgToPng,          "svg" },
             { ConversionType.PngToIco,          "image" },
             { ConversionType.IcoToPng,          "image" },
             { ConversionType.PngToPdf,          "image" },
@@ -93,10 +95,10 @@ namespace ConvertHub.Api.Services.Implementation
             { ConversionType.JfifToPng,         "image" },
             { ConversionType.ImageConverter,    "image" },
             // Vector/Design
-            { ConversionType.SvgToJpg,          "image" },
-            { ConversionType.SvgToPdf,          "image" },
-            { ConversionType.SvgToWebp,         "image" },
-            { ConversionType.SvgToIco,          "image" },
+            { ConversionType.SvgToJpg,          "svg" },
+            { ConversionType.SvgToPdf,          "svg" },
+            { ConversionType.SvgToWebp,         "svg" },
+            { ConversionType.SvgToIco,          "svg" },
             { ConversionType.SvgToEps,          "image" },
             { ConversionType.AiToSvg,           "image" },
             { ConversionType.AiToPdf,           "image" },
@@ -176,20 +178,84 @@ namespace ConvertHub.Api.Services.Implementation
 
         public IConversionService GetService(ConversionType type)
         {
-            if (_routeMap.TryGetValue(type, out var svc))
+            return type switch
             {
-                return svc switch
-                {
-                    "pdf"   => _serviceProvider.GetRequiredService<PdfConversionService>(),
-                    "image" => _serviceProvider.GetRequiredService<ImageConversionService>(),
-                    "media" => _serviceProvider.GetRequiredService<MediaConversionService>(),
-                    "text"  => _serviceProvider.GetRequiredService<TextDataConversionService>(),
-                    _       => _serviceProvider.GetRequiredService<PdfConversionService>()
-                };
-            }
+                // 📄 PDF & Documents
+                ConversionType.PdfToWord or ConversionType.PdfToDocx or ConversionType.PdfToExcel 
+                or ConversionType.PdfToXlsx or ConversionType.PdfToTxt or ConversionType.PdfToHtml 
+                or ConversionType.PdfToEpub or ConversionType.PdfToPptx or ConversionType.WordToPdf 
+                or ConversionType.DocToPdf or ConversionType.DocxToPdf or ConversionType.DocToTxt 
+                or ConversionType.DocToHtml or ConversionType.DocToOdt or ConversionType.DocToRtf 
+                or ConversionType.TxtToPdf or ConversionType.TxtToDocx or ConversionType.TxtToHtml 
+                or ConversionType.TxtToEpub or ConversionType.PptToPdf or ConversionType.PptxToPdf 
+                or ConversionType.PptToJpg or ConversionType.PptToPng or ConversionType.PptToMp4 
+                or ConversionType.XlsToCsv or ConversionType.XlsxToCsv or ConversionType.XlsToPdf 
+                or ConversionType.XlsxToPdf or ConversionType.XlsToJson or ConversionType.XlsxToJson 
+                or ConversionType.ExcelToPdf or ConversionType.MergePdf or ConversionType.SplitPdf 
+                or ConversionType.CompressPdf or ConversionType.CompressPdfLow or ConversionType.CompressPdfMed 
+                or ConversionType.CompressPdfHigh or ConversionType.EpubToPdf
+                    => _serviceProvider.GetRequiredService<PdfConversionService>(),
 
-            // Unknown type — return PdfConversionService which will throw a clear error
-            return _serviceProvider.GetRequiredService<PdfConversionService>();
+                // 🖼️ Images & Vector
+                ConversionType.PdfToJpg or ConversionType.JpgToPng or ConversionType.PngToJpg 
+                or ConversionType.JpgToWebp or ConversionType.WebpToJpg or ConversionType.PngToWebp 
+                or ConversionType.JpgToBmp or ConversionType.BmpToJpg or ConversionType.JpgToTiff 
+                or ConversionType.TiffToJpg or ConversionType.JpgToGif or ConversionType.GifToJpg 
+                or ConversionType.PngToSvg or ConversionType.PngToIco 
+                or ConversionType.IcoToPng or ConversionType.PngToPdf or ConversionType.WebpToPng 
+                or ConversionType.TiffToPdf or ConversionType.BmpToPng or ConversionType.HeicToJpg 
+                or ConversionType.HeicToPng or ConversionType.AvifToPng or ConversionType.RawToJpg 
+                or ConversionType.RawToPng or ConversionType.RawToTiff 
+                or ConversionType.AiToSvg or ConversionType.AiToPdf 
+                or ConversionType.AiToPng or ConversionType.PsdToJpg or ConversionType.PsdToPng 
+                or ConversionType.PsdToWebp or ConversionType.PsdToPdf or ConversionType.EpsToSvg 
+                or ConversionType.EpsToPdf or ConversionType.EpsToPng or ConversionType.ImageToPdf 
+                or ConversionType.JpgToPdf or ConversionType.HeicToPdf or ConversionType.JfifToPng 
+                or ConversionType.JfifToJpg or ConversionType.ImageConverter
+                    => _serviceProvider.GetRequiredService<ImageConversionService>(),
+
+                // 📐 SVG (Optimized)
+                ConversionType.SvgToPng or ConversionType.SvgToJpg or ConversionType.SvgToPdf 
+                or ConversionType.SvgToWebp or ConversionType.SvgToIco or ConversionType.SvgToEps
+                    => _serviceProvider.GetRequiredService<SvgConversionService>(),
+
+                // 🎬 Media (Video & Audio)
+                ConversionType.Mp4ToMp3 or ConversionType.VideoToMp3 or ConversionType.Mp3ToWav 
+                or ConversionType.WavToMp3 or ConversionType.Mp3ToAac or ConversionType.AacToMp3 
+                or ConversionType.Mp3ToOgg or ConversionType.OggToMp3 or ConversionType.Mp3ToFlac 
+                or ConversionType.FlacToMp3 or ConversionType.WavToFlac or ConversionType.WavToAac 
+                or ConversionType.M4aToMp3 or ConversionType.FlacToAlac or ConversionType.WmaToMp3 
+                or ConversionType.Mp4ToAvi or ConversionType.Mp4ToMov or ConversionType.Mp4ToMkv 
+                or ConversionType.Mp4ToWebm or ConversionType.Mp4ToGif or ConversionType.VideoToGif 
+                or ConversionType.WebmToGif or ConversionType.AviToMp4 or ConversionType.MovToMp4 
+                or ConversionType.MkvToMp4 or ConversionType.WebmToMp4 or ConversionType.FlvToMp4 
+                or ConversionType.WmvToMp4 or ConversionType.ThreeGpToMp4 or ConversionType.M4vToMp4 
+                or ConversionType.GifToMp4 or ConversionType.ApngToGif or ConversionType.ImageToGif 
+                or ConversionType.MovToGif or ConversionType.AviToGif or ConversionType.VideoConverter 
+                or ConversionType.AudioConverter or ConversionType.Mp4Converter
+                    => _serviceProvider.GetRequiredService<MediaConversionService>(),
+
+                // 📦 Archive
+                ConversionType.Zip or ConversionType.Unzip or ConversionType.Archive 
+                or ConversionType.ZipToRar or ConversionType.RarToZip or ConversionType.ZipTo7z 
+                or ConversionType.SevenZipToZip or ConversionType.ZipToTar or ConversionType.TarToGz 
+                or ConversionType.TarGzToZip or ConversionType.CabToZip or ConversionType.IsoToZip
+                    => _serviceProvider.GetRequiredService<ArchiveConversionService>(),
+
+                // 💻 Code, Data & Subtitles
+                ConversionType.CsvToXlsx or ConversionType.CsvToJson or ConversionType.JsonToCsv 
+                or ConversionType.JsonToXml or ConversionType.XmlToJson or ConversionType.JsonToYaml 
+                or ConversionType.YamlToJson or ConversionType.JsonToXmlCode or ConversionType.YamlToToml 
+                or ConversionType.CsvToSql or ConversionType.SqlToCsv or ConversionType.SqlToJson 
+                or ConversionType.MarkdownToHtml or ConversionType.HtmlToMarkdown or ConversionType.HtmlToPdf 
+                or ConversionType.HtmlToDocx or ConversionType.UrlToPdf or ConversionType.SrtToVtt 
+                or ConversionType.VttToSrt or ConversionType.SrtToAss or ConversionType.AssToSrt 
+                or ConversionType.SrtToSub or ConversionType.SubToSrt or ConversionType.VttToTxt 
+                or ConversionType.CssMin or ConversionType.JsBeautify
+                    => _serviceProvider.GetRequiredService<TextDataConversionService>(),
+
+                _ => throw new NotSupportedException($"No conversion service found for {type}")
+            };
         }
     }
 }

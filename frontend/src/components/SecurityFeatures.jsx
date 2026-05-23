@@ -22,9 +22,10 @@ const SECURITY_ITEMS = [
     icon: HiOutlineEyeSlash,
     title: 'Privacy Guaranteed',
     description: "Our automated process means no human will ever see your files. Total anonymity.",
-    color: 'text-purple-500',
-    bg: 'bg-purple-500/10'
+    color: 'text-primary-500',
+    bg: 'bg-primary-500/10'
   },
+
   {
     icon: HiOutlineTrash,
     title: 'Automatic Deletion',

@@ -8,10 +8,17 @@ import ConvertPage from './pages/ConvertPage';
 
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+import Disclaimer from './pages/Disclaimer';
+import DmcaPolicy from './pages/DmcaPolicy';
 
+import BlogPage from './pages/BlogPage';
+import ArticlePage from './pages/ArticlePage';
 import NotFoundPage from './pages/NotFoundPage';
-import AdBanner from './components/AdBanner';
 import AnalyticsTracker from './components/AnalyticsTracker';
+import ScrollToTop from './components/ScrollToTop';
+import CookieConsent from './components/CookieConsent';
 
 export default function App() {
   const { darkMode } = useTheme();
@@ -22,6 +29,7 @@ export default function App() {
         darkMode ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'
       }`}
     >
+      <ScrollToTop />
       {/* Analytics Tracker - Listen for route changes */}
       <AnalyticsTracker />
       {/* Dynamic Grid Background */}
@@ -30,16 +38,10 @@ export default function App() {
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
       </div>
 
+      <CookieConsent />
       <Navbar />
       
       <div className="flex-1 flex flex-col lg:flex-row max-w-[1600px] mx-auto w-full relative">
-        {/* Left Sidebar Ad */}
-        <aside className="hidden lg:block w-64 shrink-0 p-4 sticky top-24 h-fit">
-          <div className="aspect-[4/10] bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center text-xs text-slate-500 overflow-hidden">
-            <AdBanner slot="LEFT_SIDEBAR" format="vertical" />
-          </div>
-        </aside>
-
         <main className="flex-1 min-w-0">
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -47,19 +49,17 @@ export default function App() {
             <Route path="/:toolId" element={<ConvertPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
-            <Route path="/privacy" element={<div className="pt-48 text-center text-4xl">Privacy Policy</div>} />
-            <Route path="/terms" element={<div className="pt-48 text-center text-4xl">Terms of Service</div>} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/dmca" element={<DmcaPolicy />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:articleId" element={<ArticlePage />} />
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
 
-        {/* Right Sidebar Ad */}
-        <aside className="hidden lg:block w-64 shrink-0 p-4 sticky top-24 h-fit">
-          <div className="aspect-[4/10] bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center text-xs text-slate-500 overflow-hidden">
-            <AdBanner slot="RIGHT_SIDEBAR" format="vertical" />
-          </div>
-        </aside>
       </div>
 
       <Footer />

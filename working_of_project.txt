@@ -1,0 +1,47 @@
+# How ConvertHub Works
+
+ConvertHub is a full-stack universal file conversion platform designed to handle a wide variety of file formats seamlessly. Below is a detailed breakdown of its architecture and workflow.
+
+## 1. Architecture Overview
+The project is split into two main parts:
+- **Frontend**: A modern, responsive React application that provides the user interface for uploading files and selecting conversion options.
+- **Backend**: A robust .NET 9 Web API that handles the heavy lifting of file processing and conversion using various specialized libraries.
+
+## 2. Frontend Workflow (React + Vite)
+1.  **File Selection**: Users drag and drop files into the `react-dropzone` powered area.
+2.  **Conversion Setup**: For each file, users select the target format from a dynamically generated list based on the source extension.
+3.  **Upload Process**:
+    - The frontend sends a `POST /api/convert/upload` request with the file.
+    - The backend returns a temporary `filePath`.
+4.  **Starting Conversion**:
+    - Once uploaded, the frontend sends a `POST /api/convert` request with the `filePath`, `targetFormat`, and `originalFileName`.
+    - The backend returns a `jobId`.
+5.  **Status Monitoring**:
+    - The frontend polls `GET /api/convert/status/{jobId}` to track progress (0-100%) and state (Processing, Completed, Failed).
+6.  **Download & Cleanup**:
+    - When completed, the frontend triggers a download from `GET /api/convert/download/{jobId}`.
+    - Finally, it calls `DELETE /api/convert/cleanup/{jobId}` to remove the temporary file from the server.
+
+## 3. Backend Workflow (.NET 9 API)
+1.  **Request Handling**: The `ConvertController` manages all incoming API calls.
+2.  **Job Management**:
+    - `JobManager` (Singleton) tracks all active and completed conversion jobs in memory.
+    - Conversions are run in background tasks using `Task.Run` to keep the API responsive.
+3.  **Conversion Logic**:
+    - The `ConversionFactory` determines which service to use based on the conversion type.
+    - **Services**:
+        - `PdfConversionService`: Uses `itext7` and `DocumentFormat.OpenXml` for PDF/Office tasks.
+        - `ImageConversionService`: Uses `Magick.NET` and `ImageSharp` for image processing.
+        - `MediaConversionService`: Uses `FFmpeg` (via `FFMpegCore`) for audio and video.
+        - `TextDataConversionService`: Handles JSON, CSV, XML, YAML, and Markdown using specialized parsers.
+4.  **Storage**: Files are temporarily stored in a `TempUploads` directory and cleaned up after download or manually via the API.
+
+## 4. Key Technologies
+- **Frontend**: React 19, Vite, Tailwind CSS 4, Framer Motion (animations), Lucide (icons).
+- **Backend**: .NET 9, FFmpeg (media), Magick.NET (images), iText7 (PDF), OpenXML (Office).
+- **Deployment**: Configured for Netlify (Frontend) and Render/Docker (Backend).
+
+## 5. Security & Performance
+- **CORS**: Configured to allow cross-origin requests between the frontend and backend.
+- **Upload Limits**: Supported up to 200MB per file (configurable).
+- **Error Handling**: Comprehensive middleware and controller-level try-catch blocks to provide meaningful feedback to users.
