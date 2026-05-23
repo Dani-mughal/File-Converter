@@ -82,7 +82,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg mb-1">Email Support</h3>
-                  <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>adnanmughal3153@gmail.com</p>
+                  <p className={darkMode ? 'text-slate-400' : 'text-slate-500'}>support@converterhub.tech</p>
                 </div>
               </div>
               <div className="flex items-start gap-6">

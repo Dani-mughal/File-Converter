@@ -12,7 +12,8 @@ import {
   HiOutlineArrowPathRoundedSquare,
   HiOutlineQueueList,
   HiOutlineArchiveBox,
-  HiOutlinePlay
+  HiOutlinePlay,
+  HiOutlineGlobeAlt
 } from 'react-icons/hi2';
 import { FileStack } from 'lucide-react';
 import ConversionGrid from '../components/ConversionGrid';
@@ -24,54 +25,54 @@ import { getSeoConfig } from '../config/seoConfig';
 
 const FEATURES = [
   {
-    icon: HiOutlineQueueList,
-    title: '1000+ Combinations',
-    description: 'Support for nearly every file format including PDF, DOCX, XLSX, and more.',
-    color: 'from-amber-400 to-orange-500',
-    bgLight: 'bg-amber-50',
-    bgDark: 'bg-amber-500/10',
-    textColor: 'text-amber-500',
-  },
-  {
-    icon: HiOutlineBolt,
-    title: 'Fast Processing',
-    description: 'Lightning-fast cloud servers process your files in seconds.',
-    color: 'from-sky-400 to-blue-500',
-    bgLight: 'bg-sky-50',
-    bgDark: 'bg-sky-500/10',
-    textColor: 'text-sky-500',
-  },
-  {
-    icon: HiOutlineShieldCheck,
-    title: 'Secure & Private',
-    description: 'We prioritize your privacy. All files are automatically deleted after 30 minutes.',
+    icon: HiOutlineLockClosed,
+    title: 'Bank-Grade Security',
+    description: 'Every file transfer is secured with 256-bit SSL encryption. We don\'t just process files; we protect your digital privacy.',
     color: 'from-emerald-400 to-teal-500',
     bgLight: 'bg-emerald-50',
     bgDark: 'bg-emerald-500/10',
     textColor: 'text-emerald-500',
   },
   {
-    icon: HiOutlineQueueList,
-    title: 'Batch Conversion',
-    description: 'Upload and convert multiple files simultaneously with ease.',
+    icon: HiOutlineBolt,
+    title: 'Lightning Cloud Processing',
+    description: 'Our global server network ensures that even the most complex multi-page document conversions happen in seconds, not minutes.',
+    color: 'from-sky-400 to-blue-500',
+    bgLight: 'bg-sky-50',
+    bgDark: 'bg-sky-500/10',
+    textColor: 'text-sky-500',
+  },
+  {
+    icon: HiOutlineGlobeAlt,
+    title: 'Cross-Platform Harmony',
+    description: 'Access your dedicated workstation from any device—Windows, macOS, iOS, or Android—without ever downloading a single megabyte of software.',
+    color: 'from-amber-400 to-orange-500',
+    bgLight: 'bg-amber-50',
+    bgDark: 'bg-amber-500/10',
+    textColor: 'text-amber-500',
+  },
+  {
+    icon: HiOutlineArrowPathRoundedSquare,
+    title: 'Zero-Retention Policy',
+    description: 'We respect your data. All uploaded and processed files are automatically and permanently purged from our servers within 30 minutes.',
     color: 'from-primary-400 to-blue-600',
     bgLight: 'bg-primary-50',
     bgDark: 'bg-primary-500/10',
     textColor: 'text-primary-500',
   },
   {
-    icon: HiOutlineArchiveBox,
-    title: 'ZIP & Unzip Support',
-    description: 'Compress files into ZIP archives or extract them instantly.',
+    icon: HiOutlineQueueList,
+    title: '1000+ Combinations',
+    description: 'Comprehensive support for nearly every file format including PDF, DOCX, XLSX, images, and more.',
     color: 'from-rose-400 to-red-500',
     bgLight: 'bg-rose-50',
     bgDark: 'bg-rose-500/10',
     textColor: 'text-rose-500',
   },
   {
-    icon: HiOutlineCloud,
-    title: 'No Software Needed',
-    description: '100% online. No installation required, works in any browser.',
+    icon: HiOutlineShieldCheck,
+    title: 'High-Fidelity Results',
+    description: 'Our advanced conversion engines maintain fonts, layouts, and image resolution with pixel-perfect precision.',
     color: 'from-cyan-400 to-teal-500',
     bgLight: 'bg-cyan-50',
     bgDark: 'bg-cyan-500/10',
@@ -83,17 +84,36 @@ const TRUST_POINTS = [
   {
     icon: HiOutlineLockClosed,
     title: 'End-to-End Encryption',
-    text: 'All file transfers are secured with SSL 256-bit encryption for maximum privacy.'
+    text: 'All file transfers are secured with SSL 256-bit encryption for maximum privacy and data integrity.'
   },
   {
     icon: HiOutlineArrowPathRoundedSquare,
-    title: 'Automatic Deletion',
-    text: 'We respect your data. All uploaded files are permanently deleted from our servers after 30 minutes.'
+    title: 'Zero Data Retention',
+    text: 'We respect your digital footprint. All uploaded files are permanently shredded from our servers after 30 minutes.'
   },
   {
     icon: HiOutlineShieldCheck,
-    title: 'Zero Data Selling',
-    text: 'We never store, share, or sell your files or personal information to third parties.'
+    title: 'Verified Transparency',
+    text: 'We never store, share, or monetize your files or personal information. Your privacy is our business model.'
+  }
+];
+
+const FAQ_DATA = [
+  {
+    question: "Is ConverterHub.tech genuinely free to use?",
+    answer: "Yes, our core conversion tools are 100% free with no hidden subscriptions. We believe professional-grade document tools should be accessible to everyone, from students to corporate teams."
+  },
+  {
+    question: "Does the conversion process maintain my file formatting?",
+    answer: "Absolutely. Our advanced conversion engines are specifically tuned to preserve fonts, layouts, and tables with the highest degree of accuracy possible in cross-format transformation."
+  },
+  {
+    question: "How secure is my data on ConverterHub?",
+    answer: "Security is our top priority. We use bank-level encryption and a strict 30-minute auto-deletion policy. Once your session is over, no trace of your data remains on our infrastructure."
+  },
+  {
+    question: "Do I need to install any software or apps?",
+    answer: "No. ConverterHub is a cloud-native platform. It works entirely within your web browser on any device, including smartphones, tablets, and desktop computers."
   }
 ];
 
@@ -152,7 +172,7 @@ export default function HomePage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              Production-Grade File Conversion
+              Universal File Conversion, Refined.
             </span>
           </motion.div>
 
@@ -164,8 +184,8 @@ export default function HomePage() {
               darkMode ? 'text-white' : 'text-slate-900'
             }`}
           >
-            Universal File <br className="hidden sm:block" />
-            <span className="gradient-text drop-shadow-sm">Converter</span>
+            The Professional <br className="hidden sm:block" />
+            <span className="gradient-text drop-shadow-sm">Toolkit for Files</span>
           </motion.h1>
 
           <motion.p
@@ -176,8 +196,9 @@ export default function HomePage() {
               darkMode ? 'text-slate-400' : 'text-slate-600'
             }`}
           >
-            Professional tools for PDF, Image, and Media conversion. 
-            Fast, secure, and entirely online.
+            Bridge the gap between digital formats with ConverterHub.tech. Transform PDFs, 
+            optimize heavy images, and manage document workflows with cloud-powered precision. 
+            No installs, no registries—just industry-leading security and speed.
           </motion.p>
 
           <motion.div
@@ -226,7 +247,7 @@ export default function HomePage() {
               className="group relative inline-flex items-center gap-3 px-10 py-5 gradient-bg text-white font-bold rounded-2xl shadow-2xl shadow-primary-500/40 hover:shadow-primary-500/60 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              <span className="relative z-10 text-lg">Start Converting</span>
+              <span className="relative z-10 text-lg">Start Converting Now</span>
               <svg className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -252,7 +273,7 @@ export default function HomePage() {
                 ))}
               </div>
               <span className={`text-sm font-semibold flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                <span>Trusted by 10,000+ users</span>
+                <span>Trusted by 50,000+ users</span>
                 <span className="hidden sm:inline text-slate-300 dark:text-slate-600">•</span>
                 <span className="flex items-center gap-1"><span className="text-amber-400 text-lg">★★★★★</span> 4.9/5</span>
               </span>
@@ -369,6 +390,31 @@ export default function HomePage() {
                 </motion.div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className={`py-28 ${darkMode ? 'bg-slate-900/20' : 'bg-slate-50/50'}`}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className={`text-4xl font-black mb-4 ${darkMode ? 'text-white' : 'text-slate-900'}`}>Frequently Asked Questions</h2>
+            <p className={`${darkMode ? 'text-slate-400' : 'text-slate-600'} text-lg`}>Everything you need to know about ConverterHub.</p>
+          </div>
+          <div className="space-y-6">
+            {FAQ_DATA.map((faq, i) => (
+              <div 
+                key={i}
+                className={`p-8 rounded-3xl border ${
+                  darkMode 
+                    ? 'bg-slate-900/50 border-white/5 hover:border-primary-500/30' 
+                    : 'bg-white border-slate-200 shadow-sm hover:border-primary-200'
+                } transition-all duration-300`}
+              >
+                <h3 className={`text-xl font-bold mb-3 ${darkMode ? 'text-white' : 'text-slate-900'}`}>{faq.question}</h3>
+                <p className={`leading-relaxed ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>{faq.answer}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

@@ -61,11 +61,22 @@ export default function Footer() {
       ]
     },
     {
+      title: 'Resources',
+      links: [
+        { label: 'Resource Hub', href: '/blog' },
+        { label: 'PDF Guides', href: '/blog/pdf-vs-docx-comparison' },
+        { label: 'Image Secrets', href: '/blog/image-compression-guide' },
+        { label: 'Security Brief', href: '/blog/protecting-digital-privacy' },
+        { label: 'Trust & Safety', href: '/privacy' },
+      ]
+    },
+    {
       title: 'Company',
       links: [
         { label: 'About Us', href: '/about' },
         { label: 'Privacy Policy', href: '/privacy' },
         { label: 'Terms of Service', href: '/terms' },
+        { label: 'DMCA Policy', href: '/dmca' },
         { label: 'Contact Support', href: '/contact' },
       ]
     }
@@ -173,9 +184,12 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-            &copy; {currentYear} ConverterHub. All rights reserved.
-          </p>
+          <div className="flex items-center gap-6">
+            <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+              &copy; {currentYear} ConverterHub. All rights reserved.
+            </p>
+            <a href="/sitemap.xml" className="text-[10px] text-slate-500 hover:text-primary-500 uppercase tracking-widest font-bold">Sitemap</a>
+          </div>
           <div className="flex items-center gap-2 text-xs font-medium">
             <span className={darkMode ? 'text-slate-500' : 'text-slate-400'}>Distributed by</span>
             <span className="gradient-text font-bold">Dani Mughal</span>

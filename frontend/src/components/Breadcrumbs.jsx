@@ -1,10 +1,43 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { HiOutlineChevronRight, HiOutlineHome } from 'react-icons/hi2';
+import { Helmet } from 'react-helmet-async';
 
 const Breadcrumbs = ({ toolId, toolName, darkMode }) => {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://converterhub.tech/"
+      },
+      ...(toolId ? [
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Converters",
+          "item": "https://converterhub.tech/convert"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": toolName || toolId,
+          "item": `https://converterhub.tech/${toolId}`
+        }
+      ] : [])
+    ]
+  };
+
   return (
     <nav className="flex mb-8" aria-label="Breadcrumb">
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
+      </Helmet>
       <ol className="inline-flex items-center space-x-1 md:space-x-3">
         <li className="inline-flex items-center">
           <Link
@@ -45,33 +78,6 @@ const Breadcrumbs = ({ toolId, toolName, darkMode }) => {
           </li>
         )}
       </ol>
-
-      {/* Structured Data for Breadcrumbs */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            {
-              "@type": "ListItem",
-              "position": 1,
-              "name": "Home",
-              "item": "https://converterhub.tech/"
-            },
-            ...(toolId ? [{
-              "@type": "ListItem",
-              "position": 2,
-              "name": "Converters",
-              "item": "https://converterhub.tech/convert"
-            }, {
-              "@type": "ListItem",
-              "position": 3,
-              "name": toolName || toolId,
-              "item": `https://converterhub.tech/${toolId}`
-            }] : [])
-          ]
-        })}
-      </script>
     </nav>
   );
 };

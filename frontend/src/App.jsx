@@ -10,10 +10,15 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
+import Disclaimer from './pages/Disclaimer';
+import DmcaPolicy from './pages/DmcaPolicy';
 
+import BlogPage from './pages/BlogPage';
+import ArticlePage from './pages/ArticlePage';
 import NotFoundPage from './pages/NotFoundPage';
 import AnalyticsTracker from './components/AnalyticsTracker';
 import ScrollToTop from './components/ScrollToTop';
+import CookieConsent from './components/CookieConsent';
 
 export default function App() {
   const { darkMode } = useTheme();
@@ -33,6 +38,7 @@ export default function App() {
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
       </div>
 
+      <CookieConsent />
       <Navbar />
       
       <div className="flex-1 flex flex-col lg:flex-row max-w-[1600px] mx-auto w-full relative">
@@ -45,6 +51,10 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/dmca" element={<DmcaPolicy />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:articleId" element={<ArticlePage />} />
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

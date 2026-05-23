@@ -23,7 +23,7 @@ const SEO = ({ config }) => {
     "@type": "Organization",
     "name": "ConverterHub",
     "url": "https://converterhub.tech",
-    "logo": "https://converterhub.tech/logo.png",
+    "logo": "https://converterhub.tech/favicon.svg",
     "sameAs": [
       "https://twitter.com/converterhub",
       "https://facebook.com/converterhub"
